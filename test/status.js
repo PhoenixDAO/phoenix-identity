@@ -48,7 +48,7 @@ contract('Testing Status', function (accounts) {
       recoveryAddress:     user.recoveryAddress,
       associatedAddresses: [user.address],
       providers:           [instances.Snowflake.address],
-      resolvers:           [instances.ClientRaindrop.address]
+      resolvers:           [instances.ClientPhoenixAuthentication.address]
     })
   })
 

@@ -1,8 +1,8 @@
 const IdentityRegistry = artifacts.require('./_testing/IdentityRegistry.sol')
 const PhoenixToken = artifacts.require('./_testing/PhoenixToken.sol')
 const Snowflake = artifacts.require('./Snowflake.sol')
-const ClientRaindrop = artifacts.require('./resolvers/ClientRaindrop/ClientRaindrop.sol')
-const OldClientRaindrop = artifacts.require('./_testing/OldClientRaindrop.sol')
+const ClientPhoenixAuthentication = artifacts.require('./resolvers/ClientPhoenixAuthentication/ClientPhoenixAuthentication.sol')
+const OldClientPhoenixAuthentication = artifacts.require('./_testing/OldClientPhoenixAuthentication.sol')
 
 async function initialize (owner, users) {
   const instances = {}
@@ -22,12 +22,12 @@ async function initialize (owner, users) {
     instances.IdentityRegistry.address, instances.PhoenixToken.address, { from: owner }
   )
 
-  instances.OldClientRaindrop = await OldClientRaindrop.new({ from: owner })
+  instances.OldClientPhoenixAuthentication = await OldClientPhoenixAuthentication.new({ from: owner })
 
-  instances.ClientRaindrop = await ClientRaindrop.new(
-    instances.Snowflake.address, instances.OldClientRaindrop.address, 0, 0, { from: owner }
+  instances.ClientPhoenixAuthentication = await ClientPhoenixAuthentication.new(
+    instances.Snowflake.address, instances.OldClientPhoenixAuthentication.address, 0, 0, { from: owner }
   )
-  await instances.Snowflake.setClientRaindropAddress(instances.ClientRaindrop.address, { from: owner })
+  await instances.Snowflake.setClientPhoenixAuthenticationAddress(instances.ClientPhoenixAuthentication.address, { from: owner })
 
   return instances
 }

@@ -7,7 +7,7 @@ import "./interfaces/PhoenixInterface.sol";
 import "./interfaces/SnowflakeResolverInterface.sol";
 import "./interfaces/SnowflakeViaInterface.sol";
 import "./interfaces/IdentityRegistryInterface.sol";
-import "./interfaces/ClientRaindropInterface.sol";
+import "./interfaces/ClientPhoenixAuthenticationInterface.sol";
 
 contract Snowflake is Ownable {
     using SafeMath for uint;
@@ -22,8 +22,8 @@ contract Snowflake is Ownable {
     IdentityRegistryInterface private identityRegistry;
     address public phoenixTokenAddress;
     PhoenixInterface private phoenixToken;
-    address public clientRaindropAddress;
-    ClientRaindropInterface private clientRaindrop;
+    address public clientPhoenixAuthenticationAddress;
+    ClientPhoenixAuthenticationInterface private clientPhoenixAuthentication;
 
     // signature variables
     uint public signatureTimeout = 1 days;
@@ -58,12 +58,12 @@ contract Snowflake is Ownable {
         phoenixToken = PhoenixInterface(phoenixTokenAddress);
     }
 
-    function setClientRaindropAddress(address _clientRaindropAddress) public onlyOwner {
-        clientRaindropAddress = _clientRaindropAddress;
-        clientRaindrop = ClientRaindropInterface(clientRaindropAddress);
+    function setClientPhoenixAuthenticationAddress(address _clientPhoenixAuthenticationAddress) public onlyOwner {
+        clientPhoenixAuthenticationAddress = _clientPhoenixAuthenticationAddress;
+        clientPhoenixAuthentication = ClientPhoenixAuthenticationInterface(clientPhoenixAuthenticationAddress);
     }
 
-    // wrap createIdentityDelegated and initialize the client raindrop resolver
+    // wrap createIdentityDelegated and initialize the client phoenixAuthentication resolver
     function createIdentityDelegated(
         address recoveryAddress, address associatedAddress, address[] memory providers, string memory casedPhoenixId,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
@@ -80,7 +80,7 @@ contract Snowflake is Ownable {
             recoveryAddress, associatedAddress, _providers, new address[](0), v, r, s, timestamp
         );
 
-        _addResolver(_ein, clientRaindropAddress, true, 0, abi.encode(associatedAddress, casedPhoenixId));
+        _addResolver(_ein, clientPhoenixAuthenticationAddress, true, 0, abi.encode(associatedAddress, casedPhoenixId));
 
         return _ein;
     }

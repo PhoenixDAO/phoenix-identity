@@ -6,10 +6,10 @@ interface SnowflakeInterface {
 
     function identityRegistryAddress() external returns (address);
     function phoenixTokenAddress() external returns (address);
-    function clientRaindropAddress() external returns (address);
+    function clientPhoenixAuthenticationAddress() external returns (address);
 
     function setAddresses(address _identityRegistryAddress, address _phoenixTokenAddress) external;
-    function setClientRaindropAddress(address _clientRaindropAddress) external;
+    function setClientPhoenixAuthenticationAddress(address _clientPhoenixAuthenticationAddress) external;
 
     function createIdentityDelegated(
         address recoveryAddress, address associatedAddress, address[] calldata providers, string calldata casedPhoenixId,

@@ -1,14 +1,14 @@
 pragma solidity ^0.5.0;
 
 import "../zeppelin/ownership/Ownable.sol";
-import "../resolvers/ClientRaindrop/StringUtils.sol";
+import "../resolvers/ClientPhoenixAuthentication/StringUtils.sol";
 import "../interfaces/PhoenixInterface.sol";
 
-contract OldClientRaindrop is Ownable {
+contract OldClientPhoenixAuthentication is Ownable {
     // attach the StringUtils library
     using StringUtils for string;
     using StringUtils for StringUtils.slice;
-    // Events for when a user signs up for Raindrop Client and when their account is deleted
+    // Events for when a user signs up for PhoenixAuthentication Client and when their account is deleted
     event UserSignUp(string casedUserName, address userAddress);
     event UserDeleted(string casedUserName);
 
@@ -41,7 +41,7 @@ contract OldClientRaindrop is Ownable {
         requireStake(msg.sender, minimumPhoenixStakeDelegatedUser)
     {
         require(
-            isSigned(userAddress, keccak256(abi.encodePacked("Create RaindropClient Phoenix Account")), v, r, s),
+            isSigned(userAddress, keccak256(abi.encodePacked("Create PhoenixAuthenticationClient Phoenix Account")), v, r, s),
             "Permission denied."
         );
         _userSignUp(casedUserName, userAddress);

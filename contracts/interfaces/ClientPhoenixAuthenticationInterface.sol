@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-interface ClientRaindropInterface {
+interface ClientPhoenixAuthenticationInterface {
     function phoenixStakeUser() external returns (uint);
     function phoenixStakeDelegatedUser() external returns (uint);
 

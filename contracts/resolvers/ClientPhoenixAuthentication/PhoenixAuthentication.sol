@@ -2,12 +2,12 @@ pragma solidity ^0.5.0;
 
 import "./StringUtils.sol";
 import "./OldClientPhoenixAuthenticationInterface.sol";
-import "../../SnowflakeResolver.sol";
+import "../../PhoenixIdentityResolver.sol";
 import "../../interfaces/IdentityRegistryInterface.sol";
 import "../../interfaces/PhoenixInterface.sol";
-import "../../interfaces/SnowflakeInterface.sol";
+import "../../interfaces/PhoenixIdentityInterface.sol";
 
-contract ClientPhoenixAuthentication is SnowflakeResolver {
+contract ClientPhoenixAuthentication is PhoenixIdentityResolver {
     // attach the StringUtils library
     using StringUtils for string;
     using StringUtils for StringUtils.slice;
@@ -38,16 +38,16 @@ contract ClientPhoenixAuthentication is SnowflakeResolver {
     mapping (address => bytes32) private addressDirectory;
 
     constructor(
-        address snowflakeAddress, address oldClientPhoenixAuthenticationAddress, uint _phoenixStakeUser, uint _phoenixStakeDelegatedUser
+        address phoenixIdentityAddress, address oldClientPhoenixAuthenticationAddress, uint _phoenixStakeUser, uint _phoenixStakeDelegatedUser
     )
-        SnowflakeResolver(
+        PhoenixIdentityResolver(
             "Client PhoenixAuthentication", "A registry that links EINs to PhoenixIDs to power Client PhoenixAuthentication MFA.",
-            snowflakeAddress,
+            phoenixIdentityAddress,
             true, true
         )
         public
     {
-        setSnowflakeAddress(snowflakeAddress);
+        setPhoenixIdentityAddress(phoenixIdentityAddress);
         setOldClientPhoenixAuthenticationAddress(oldClientPhoenixAuthenticationAddress);
         setStakes(_phoenixStakeUser, _phoenixStakeDelegatedUser);
     }
@@ -58,13 +58,13 @@ contract ClientPhoenixAuthentication is SnowflakeResolver {
         _;
     }
 
-    // set the snowflake address, and phoenix token + identity registry contract wrappers
-    function setSnowflakeAddress(address snowflakeAddress) public onlyOwner() {
-        super.setSnowflakeAddress(snowflakeAddress);
+    // set the phoenixIdentity address, and phoenix token + identity registry contract wrappers
+    function setPhoenixIdentityAddress(address phoenixIdentityAddress) public onlyOwner() {
+        super.setPhoenixIdentityAddress(phoenixIdentityAddress);
 
-        SnowflakeInterface snowflake = SnowflakeInterface(snowflakeAddress);
-        phoenixToken = PhoenixInterface(snowflake.phoenixTokenAddress());
-        identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
+        PhoenixIdentityInterface phoenixIdentity = PhoenixIdentityInterface(phoenixIdentityAddress);
+        phoenixToken = PhoenixInterface(phoenixIdentity.phoenixTokenAddress());
+        identityRegistry = IdentityRegistryInterface(phoenixIdentity.identityRegistryAddress());
     }
 
     // set the old client PhoenixAuthentication address
@@ -88,13 +88,13 @@ contract ClientPhoenixAuthentication is SnowflakeResolver {
         _signUp(identityRegistry.getEIN(msg.sender), casedPhoenixId, _address);
     }
 
-    // function for users signing up through the snowflake provider
+    // function for users signing up through the phoenixIdentity provider
     function onAddition(uint ein, uint, bytes memory extraData)
         // solium-disable-next-line security/no-tx-origin
-        public senderIsSnowflake() requireStake(tx.origin, phoenixStakeDelegatedUser) returns (bool)
+        public senderIsPhoenixIdentity() requireStake(tx.origin, phoenixStakeDelegatedUser) returns (bool)
     {
         (address _address, string memory casedPhoenixID) = abi.decode(extraData, (address, string));
-        require(identityRegistry.isProviderFor(ein, msg.sender), "Snowflake is not a Provider for the passed EIN.");
+        require(identityRegistry.isProviderFor(ein, msg.sender), "PhoenixIdentity is not a Provider for the passed EIN.");
         _signUp(ein, casedPhoenixID, _address);
      
         return true;
@@ -132,7 +132,7 @@ contract ClientPhoenixAuthentication is SnowflakeResolver {
         }
     }
 
-    function onRemoval(uint ein, bytes memory) public senderIsSnowflake() returns (bool) {
+    function onRemoval(uint ein, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
         bytes32 uncasedPhoenixIDHash = einDirectory[ein];
         assert(uncasedPhoenixIDHashActive(uncasedPhoenixIDHash));
 

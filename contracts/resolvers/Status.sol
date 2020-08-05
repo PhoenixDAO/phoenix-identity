@@ -1,24 +1,24 @@
 pragma solidity ^0.5.0;
 
-import "../SnowflakeResolver.sol";
+import "../PhoenixIdentityResolver.sol";
 import "../interfaces/IdentityRegistryInterface.sol";
 import "../interfaces/PhoenixInterface.sol";
-import "../interfaces/SnowflakeInterface.sol";
+import "../interfaces/PhoenixIdentityInterface.sol";
 
-contract Status is SnowflakeResolver {
+contract Status is PhoenixIdentityResolver {
     mapping (uint => string) private statuses;
 
     uint signUpFee = 1000000000000000000;
     string firstStatus = "My first status 😎";
 
-    constructor (address snowflakeAddress)
-        SnowflakeResolver("Status", "Set your status.", snowflakeAddress, true, false) public
+    constructor (address phoenixIdentityAddress)
+        PhoenixIdentityResolver("Status", "Set your status.", phoenixIdentityAddress, true, false) public
     {}
 
     // implement signup function
-    function onAddition(uint ein, uint, bytes memory) public senderIsSnowflake() returns (bool) {
-        SnowflakeInterface snowflake = SnowflakeInterface(snowflakeAddress);
-        snowflake.withdrawSnowflakeBalanceFrom(ein, owner(), signUpFee);
+    function onAddition(uint ein, uint, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
+        PhoenixIdentityInterface phoenixIdentity = PhoenixIdentityInterface(phoenixIdentityAddress);
+        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(ein, owner(), signUpFee);
 
         statuses[ein] = firstStatus;
 
@@ -27,15 +27,15 @@ contract Status is SnowflakeResolver {
         return true;
     }
 
-    function onRemoval(uint, bytes memory) public senderIsSnowflake() returns (bool) {}
+    function onRemoval(uint, bytes memory) public senderIsPhoenixIdentity() returns (bool) {}
 
     function getStatus(uint ein) public view returns (string memory) {
         return statuses[ein];
     }
 
     function setStatus(string memory status) public {
-        SnowflakeInterface snowflake = SnowflakeInterface(snowflakeAddress);
-        IdentityRegistryInterface identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
+        PhoenixIdentityInterface phoenixIdentity = PhoenixIdentityInterface(phoenixIdentityAddress);
+        IdentityRegistryInterface identityRegistry = IdentityRegistryInterface(phoenixIdentity.identityRegistryAddress());
 
         uint ein = identityRegistry.getEIN(msg.sender);
         require(identityRegistry.isResolverFor(ein, address(this)), "The EIN has not set this resolver.");
@@ -46,8 +46,8 @@ contract Status is SnowflakeResolver {
     }
 
     function withdrawFees(address to) public onlyOwner() {
-        SnowflakeInterface snowflake = SnowflakeInterface(snowflakeAddress);
-        PhoenixInterface phoenix = PhoenixInterface(snowflake.phoenixTokenAddress());
+        PhoenixIdentityInterface phoenixIdentity = PhoenixIdentityInterface(phoenixIdentityAddress);
+        PhoenixInterface phoenix = PhoenixInterface(phoenixIdentity.phoenixTokenAddress());
         withdrawPhoenixBalanceTo(to, phoenix.balanceOf(address(this)));
     }
 

@@ -1,59 +1,59 @@
 pragma solidity ^0.5.0;
 
-import "../SnowflakeResolver.sol";
+import "../PhoenixIdentityResolver.sol";
 import "../interfaces/IdentityRegistryInterface.sol";
-import "../interfaces/SnowflakeInterface.sol";
+import "../interfaces/PhoenixIdentityInterface.sol";
 
 
-contract Resolver is SnowflakeResolver {
-    SnowflakeInterface private snowflake;
+contract Resolver is PhoenixIdentityResolver {
+    PhoenixIdentityInterface private phoenixIdentity;
     IdentityRegistryInterface private identityRegistry;
 
-    constructor (address snowflakeAddress)
-        SnowflakeResolver("Sample Resolver", "This is a sample Snowflake resolver.", snowflakeAddress, true, true)
+    constructor (address phoenixIdentityAddress)
+        PhoenixIdentityResolver("Sample Resolver", "This is a sample PhoenixIdentity resolver.", phoenixIdentityAddress, true, true)
         public
     {
-        setSnowflakeAddress(snowflakeAddress);
+        setPhoenixIdentityAddress(phoenixIdentityAddress);
     }
 
-    // set the snowflake address, and phoenix token + identity registry contract wrappers
-    function setSnowflakeAddress(address snowflakeAddress) public onlyOwner() {
-        super.setSnowflakeAddress(snowflakeAddress);
-        snowflake = SnowflakeInterface(snowflakeAddress);
-        identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
+    // set the phoenixIdentity address, and phoenix token + identity registry contract wrappers
+    function setPhoenixIdentityAddress(address phoenixIdentityAddress) public onlyOwner() {
+        super.setPhoenixIdentityAddress(phoenixIdentityAddress);
+        phoenixIdentity = PhoenixIdentityInterface(phoenixIdentityAddress);
+        identityRegistry = IdentityRegistryInterface(phoenixIdentity.identityRegistryAddress());
     }
 
     // implement signup function
-    function onAddition(uint ein, uint allowance, bytes memory) public senderIsSnowflake() returns (bool) {
+    function onAddition(uint ein, uint allowance, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
         require(allowance >= 2000000000000000000, "Must set an allowance of >=2 PHOENIX.");
-        snowflake.withdrawSnowflakeBalanceFrom(ein, address(this), allowance / 2);
+        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(ein, address(this), allowance / 2);
         return true;
     }
 
     // implement removal function
-    function onRemoval(uint, bytes memory) public senderIsSnowflake() returns (bool) {}
+    function onRemoval(uint, bytes memory) public senderIsPhoenixIdentity() returns (bool) {}
 
     // example function to test allowAndCall
-    function transferSnowflakeBalanceFromAllowAndCall(uint einFrom, uint einTo, uint amount) public {
+    function transferPhoenixIdentityBalanceFromAllowAndCall(uint einFrom, uint einTo, uint amount) public {
         require(identityRegistry.isProviderFor(einFrom, msg.sender));
-        snowflake.transferSnowflakeBalanceFrom(einFrom, einTo, amount);
+        phoenixIdentity.transferPhoenixIdentityBalanceFrom(einFrom, einTo, amount);
     }
 
     // example functions to test *From token functions
-    function transferSnowflakeBalanceFrom(uint einTo, uint amount) public {
-        snowflake.transferSnowflakeBalanceFrom(identityRegistry.getEIN(msg.sender), einTo, amount);
+    function transferPhoenixIdentityBalanceFrom(uint einTo, uint amount) public {
+        phoenixIdentity.transferPhoenixIdentityBalanceFrom(identityRegistry.getEIN(msg.sender), einTo, amount);
     }
 
-    function withdrawSnowflakeBalanceFrom(address to, uint amount) public {
-        snowflake.withdrawSnowflakeBalanceFrom(identityRegistry.getEIN(msg.sender), to, amount);
+    function withdrawPhoenixIdentityBalanceFrom(address to, uint amount) public {
+        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(identityRegistry.getEIN(msg.sender), to, amount);
     }
 
-    function transferSnowflakeBalanceFromVia(address via, uint einTo, uint amount) public {
-        snowflake.transferSnowflakeBalanceFromVia(identityRegistry.getEIN(msg.sender), via, einTo, amount, hex"");
+    function transferPhoenixIdentityBalanceFromVia(address via, uint einTo, uint amount) public {
+        phoenixIdentity.transferPhoenixIdentityBalanceFromVia(identityRegistry.getEIN(msg.sender), via, einTo, amount, hex"");
     }
 
-    function withdrawSnowflakeBalanceFromVia(address via, address to, uint amount) public {
-        snowflake.withdrawSnowflakeBalanceFromVia(identityRegistry.getEIN(msg.sender), via, to, amount, hex"");
+    function withdrawPhoenixIdentityBalanceFromVia(address via, address to, uint amount) public {
+        phoenixIdentity.withdrawPhoenixIdentityBalanceFromVia(identityRegistry.getEIN(msg.sender), via, to, amount, hex"");
     }
 
     // example functions to test *To token functions

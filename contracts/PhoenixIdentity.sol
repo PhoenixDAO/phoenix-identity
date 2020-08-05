@@ -4,12 +4,12 @@ import "./zeppelin/ownership/Ownable.sol";
 import "./zeppelin/math/SafeMath.sol";
 
 import "./interfaces/PhoenixInterface.sol";
-import "./interfaces/SnowflakeResolverInterface.sol";
-import "./interfaces/SnowflakeViaInterface.sol";
+import "./interfaces/PhoenixIdentityResolverInterface.sol";
+import "./interfaces/PhoenixIdentityViaInterface.sol";
 import "./interfaces/IdentityRegistryInterface.sol";
 import "./interfaces/ClientPhoenixAuthenticationInterface.sol";
 
-contract Snowflake is Ownable {
+contract PhoenixIdentity is Ownable {
     using SafeMath for uint;
 
     // mapping of EIN to Phoenix token deposits
@@ -145,27 +145,27 @@ contract Snowflake is Ownable {
         addProvidersFor(approvingAddress, newProviders, v[0], r[0], s[0], timestamp[0]);
         removeProvidersFor(approvingAddress, oldProviders, v[1], r[1], s[1], timestamp[1]);
         uint ein = identityRegistry.getEIN(approvingAddress);
-        emit SnowflakeProvidersUpgraded(ein, newProviders, oldProviders, approvingAddress);
+        emit PhoenixIdentityProvidersUpgraded(ein, newProviders, oldProviders, approvingAddress);
     }
 
     // permission adding a resolver for identity of msg.sender
-    function addResolver(address resolver, bool isSnowflake, uint withdrawAllowance, bytes memory extraData) public {
-        _addResolver(identityRegistry.getEIN(msg.sender), resolver, isSnowflake, withdrawAllowance, extraData);
+    function addResolver(address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData) public {
+        _addResolver(identityRegistry.getEIN(msg.sender), resolver, isPhoenixIdentity, withdrawAllowance, extraData);
     }
 
     // permission adding a resolver for identity passed by a provider
     function addResolverAsProvider(
-        uint ein, address resolver, bool isSnowflake, uint withdrawAllowance, bytes memory extraData
+        uint ein, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData
     )
         public
     {
         require(identityRegistry.isProviderFor(ein, msg.sender), "The msg.sender is not a Provider for the passed EIN");
-        _addResolver(ein, resolver, isSnowflake, withdrawAllowance, extraData);
+        _addResolver(ein, resolver, isPhoenixIdentity, withdrawAllowance, extraData);
     }
 
     // permission addResolversFor by signature
     function addResolverFor(
-        address approvingAddress, address resolver, bool isSnowflake, uint withdrawAllowance, bytes memory extraData,
+        address approvingAddress, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     )
         public
@@ -173,15 +173,15 @@ contract Snowflake is Ownable {
         uint ein = identityRegistry.getEIN(approvingAddress);
 
         validateAddResolverForSignature(
-            approvingAddress, ein, resolver, isSnowflake, withdrawAllowance, extraData, v, r, s, timestamp
+            approvingAddress, ein, resolver, isPhoenixIdentity, withdrawAllowance, extraData, v, r, s, timestamp
         );
 
-        _addResolver(ein, resolver, isSnowflake, withdrawAllowance, extraData);
+        _addResolver(ein, resolver, isPhoenixIdentity, withdrawAllowance, extraData);
     }
 
     function validateAddResolverForSignature(
         address approvingAddress, uint ein,
-        address resolver, bool isSnowflake, uint withdrawAllowance, bytes memory extraData,
+        address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     )
         private view ensureSignatureTimeValid(timestamp)
@@ -193,7 +193,7 @@ contract Snowflake is Ownable {
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
                         "I authorize that this resolver be added to my Identity.",
-                        ein, resolver, isSnowflake, withdrawAllowance, extraData, timestamp
+                        ein, resolver, isPhoenixIdentity, withdrawAllowance, extraData, timestamp
                     )
                 ),
                 v, r, s
@@ -203,7 +203,7 @@ contract Snowflake is Ownable {
     }
 
     // common logic for adding resolvers
-    function _addResolver(uint ein, address resolver, bool isSnowflake, uint withdrawAllowance, bytes memory extraData)
+    function _addResolver(uint ein, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData)
         private
     {
         require(!identityRegistry.isResolverFor(ein, resolver), "Identity has already set this resolver.");
@@ -212,12 +212,12 @@ contract Snowflake is Ownable {
         resolvers[0] = resolver;
         identityRegistry.addResolversFor(ein, resolvers);
 
-        if (isSnowflake) {
+        if (isPhoenixIdentity) {
             resolverAllowances[ein][resolver] = withdrawAllowance;
-            SnowflakeResolverInterface snowflakeResolver = SnowflakeResolverInterface(resolver);
-            if (snowflakeResolver.callOnAddition())
-                require(snowflakeResolver.onAddition(ein, withdrawAllowance, extraData), "Sign up failure.");
-            emit SnowflakeResolverAdded(ein, resolver, withdrawAllowance);
+            PhoenixIdentityResolverInterface phoenixIdentityResolver = PhoenixIdentityResolverInterface(resolver);
+            if (phoenixIdentityResolver.callOnAddition())
+                require(phoenixIdentityResolver.onAddition(ein, withdrawAllowance, extraData), "Sign up failure.");
+            emit PhoenixIdentityResolverAdded(ein, resolver, withdrawAllowance);
         }
     }
 
@@ -261,31 +261,31 @@ contract Snowflake is Ownable {
         for (uint i; i < resolvers.length; i++) {
             require(identityRegistry.isResolverFor(ein, resolvers[i]), "Identity has not set this resolver.");
             resolverAllowances[ein][resolvers[i]] = withdrawAllowances[i];
-            emit SnowflakeResolverAllowanceChanged(ein, resolvers[i], withdrawAllowances[i]);
+            emit PhoenixIdentityResolverAllowanceChanged(ein, resolvers[i], withdrawAllowances[i]);
         }
     }
 
     // permission removing a resolver for identity of msg.sender
-    function removeResolver(address resolver, bool isSnowflake, bytes memory extraData) public {
-        removeResolver(identityRegistry.getEIN(msg.sender), resolver, isSnowflake, extraData);
+    function removeResolver(address resolver, bool isPhoenixIdentity, bytes memory extraData) public {
+        removeResolver(identityRegistry.getEIN(msg.sender), resolver, isPhoenixIdentity, extraData);
     }
 
     // permission removeResolverFor by signature
     function removeResolverFor(
-        address approvingAddress, address resolver, bool isSnowflake, bytes memory extraData,
+        address approvingAddress, address resolver, bool isPhoenixIdentity, bytes memory extraData,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     )
         public ensureSignatureTimeValid(timestamp)
     {
         uint ein = identityRegistry.getEIN(approvingAddress);
 
-        validateRemoveResolverForSignature(approvingAddress, ein, resolver, isSnowflake, extraData, v, r, s, timestamp);
+        validateRemoveResolverForSignature(approvingAddress, ein, resolver, isPhoenixIdentity, extraData, v, r, s, timestamp);
 
-        removeResolver(ein, resolver, isSnowflake, extraData);
+        removeResolver(ein, resolver, isPhoenixIdentity, extraData);
     }
 
     function validateRemoveResolverForSignature(
-        address approvingAddress, uint ein, address resolver, bool isSnowflake, bytes memory extraData,
+        address approvingAddress, uint ein, address resolver, bool isPhoenixIdentity, bytes memory extraData,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     )
         private view
@@ -297,7 +297,7 @@ contract Snowflake is Ownable {
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
                         "I authorize that these Resolvers be removed from my Identity.",
-                        ein, resolver, isSnowflake, extraData, timestamp
+                        ein, resolver, isPhoenixIdentity, extraData, timestamp
                     )
                 ),
                 v, r, s
@@ -307,16 +307,16 @@ contract Snowflake is Ownable {
     }
 
     // common logic to remove resolvers
-    function removeResolver(uint ein, address resolver, bool isSnowflake, bytes memory extraData) private {
+    function removeResolver(uint ein, address resolver, bool isPhoenixIdentity, bytes memory extraData) private {
         require(identityRegistry.isResolverFor(ein, resolver), "Identity has not yet set this resolver.");
     
         delete resolverAllowances[ein][resolver];
     
-        if (isSnowflake) {
-            SnowflakeResolverInterface snowflakeResolver = SnowflakeResolverInterface(resolver);
-            if (snowflakeResolver.callOnRemoval())
-                require(snowflakeResolver.onRemoval(ein, extraData), "Removal failure.");
-            emit SnowflakeResolverRemoved(ein, resolver);
+        if (isPhoenixIdentity) {
+            PhoenixIdentityResolverInterface phoenixIdentityResolver = PhoenixIdentityResolverInterface(resolver);
+            if (phoenixIdentityResolver.callOnRemoval())
+                require(phoenixIdentityResolver.onRemoval(ein, extraData), "Removal failure.");
+            emit PhoenixIdentityResolverRemoved(ein, resolver);
         }
 
         address[] memory resolvers = new address[](1);
@@ -366,74 +366,74 @@ contract Snowflake is Ownable {
                 require(identityRegistry.identityExists(recipient), "The recipient EIN does not exist.");
             }
             deposits[recipient] = deposits[recipient].add(amount);
-            emit SnowflakeDeposit(sender, recipient, amount);
+            emit PhoenixIdentityDeposit(sender, recipient, amount);
         }
         // transferring to a via
         else {
             (
-                bool isTransfer, address resolver, address via, uint to, bytes memory snowflakeCallBytes
+                bool isTransfer, address resolver, address via, uint to, bytes memory phoenixIdentityCallBytes
             ) = abi.decode(_bytes, (bool, address, address, uint, bytes));
             
             require(phoenixToken.transferFrom(sender, via, amount), "Unable to transfer token ownership.");
 
-            SnowflakeViaInterface viaContract = SnowflakeViaInterface(via);
+            PhoenixIdentityViaInterface viaContract = PhoenixIdentityViaInterface(via);
             if (isTransfer) {
-                viaContract.snowflakeCall(resolver, to, amount, snowflakeCallBytes);
-                emit SnowflakeTransferToVia(resolver, via, to, amount);
+                viaContract.phoenixIdentityCall(resolver, to, amount, phoenixIdentityCallBytes);
+                emit PhoenixIdentityTransferToVia(resolver, via, to, amount);
             } else {
                 address payable payableTo = address(to);
-                viaContract.snowflakeCall(resolver, payableTo, amount, snowflakeCallBytes);
-                emit SnowflakeWithdrawToVia(resolver, via, address(to), amount);
+                viaContract.phoenixIdentityCall(resolver, payableTo, amount, phoenixIdentityCallBytes);
+                emit PhoenixIdentityWithdrawToVia(resolver, via, address(to), amount);
             }
         }
     }
 
-    // transfer snowflake balance from one snowflake holder to another
-    function transferSnowflakeBalance(uint einTo, uint amount) public {
+    // transfer PhoenixIdentity balance from one PhoenixIdentity holder to another
+    function transferPhoenixIdentityBalance(uint einTo, uint amount) public {
         _transfer(identityRegistry.getEIN(msg.sender), einTo, amount);
     }
 
-    // withdraw Snowflake balance to an external address
-    function withdrawSnowflakeBalance(address to, uint amount) public {
+    // withdraw PhoenixIdentity balance to an external address
+    function withdrawPhoenixIdentityBalance(address to, uint amount) public {
         _withdraw(identityRegistry.getEIN(msg.sender), to, amount);
     }
 
-    // allows resolvers to transfer allowance amounts to other snowflakes (throws if unsuccessful)
-    function transferSnowflakeBalanceFrom(uint einFrom, uint einTo, uint amount) public {
+    // allows resolvers to transfer allowance amounts to other phoenixIdentitys (throws if unsuccessful)
+    function transferPhoenixIdentityBalanceFrom(uint einFrom, uint einTo, uint amount) public {
         handleAllowance(einFrom, amount);
         _transfer(einFrom, einTo, amount);
-        emit SnowflakeTransferFrom(msg.sender);
+        emit PhoenixIdentityTransferFrom(msg.sender);
     }
 
     // allows resolvers to withdraw allowance amounts to external addresses (throws if unsuccessful)
-    function withdrawSnowflakeBalanceFrom(uint einFrom, address to, uint amount) public {
+    function withdrawPhoenixIdentityBalanceFrom(uint einFrom, address to, uint amount) public {
         handleAllowance(einFrom, amount);
         _withdraw(einFrom, to, amount);
-        emit SnowflakeWithdrawFrom(msg.sender);
+        emit PhoenixIdentityWithdrawFrom(msg.sender);
     }
 
     // allows resolvers to send withdrawal amounts to arbitrary smart contracts 'to' identities (throws if unsuccessful)
-    function transferSnowflakeBalanceFromVia(uint einFrom, address via, uint einTo, uint amount, bytes memory _bytes)
+    function transferPhoenixIdentityBalanceFromVia(uint einFrom, address via, uint einTo, uint amount, bytes memory _bytes)
         public
     {
         handleAllowance(einFrom, amount);
         _withdraw(einFrom, via, amount);
-        SnowflakeViaInterface viaContract = SnowflakeViaInterface(via);
-        viaContract.snowflakeCall(msg.sender, einFrom, einTo, amount, _bytes);
-        emit SnowflakeTransferFromVia(msg.sender, einTo);
+        PhoenixIdentityViaInterface viaContract = PhoenixIdentityViaInterface(via);
+        viaContract.phoenixIdentityCall(msg.sender, einFrom, einTo, amount, _bytes);
+        emit PhoenixIdentityTransferFromVia(msg.sender, einTo);
     }
 
     // allows resolvers to send withdrawal amounts 'to' addresses via arbitrary smart contracts
-    function withdrawSnowflakeBalanceFromVia(
+    function withdrawPhoenixIdentityBalanceFromVia(
         uint einFrom, address via, address payable to, uint amount, bytes memory _bytes
     )
         public
     {
         handleAllowance(einFrom, amount);
         _withdraw(einFrom, via, amount);
-        SnowflakeViaInterface viaContract = SnowflakeViaInterface(via);
-        viaContract.snowflakeCall(msg.sender, einFrom, to, amount, _bytes);
-        emit SnowflakeWithdrawFromVia(msg.sender, to);
+        PhoenixIdentityViaInterface viaContract = PhoenixIdentityViaInterface(via);
+        viaContract.phoenixIdentityCall(msg.sender, einFrom, to, amount, _bytes);
+        emit PhoenixIdentityWithdrawFromVia(msg.sender, to);
     }
 
     function _transfer(uint einFrom, uint einTo, uint amount) private identityExists(einTo, true) returns (bool) {
@@ -441,17 +441,17 @@ contract Snowflake is Ownable {
         deposits[einFrom] = deposits[einFrom].sub(amount);
         deposits[einTo] = deposits[einTo].add(amount);
 
-        emit SnowflakeTransfer(einFrom, einTo, amount);
+        emit PhoenixIdentityTransfer(einFrom, einTo, amount);
     }
 
     function _withdraw(uint einFrom, address to, uint amount) internal {
-        require(to != address(this), "Cannot transfer to the Snowflake smart contract itself.");
+        require(to != address(this), "Cannot transfer to the PhoenixIdentity smart contract itself.");
 
         require(deposits[einFrom] >= amount, "Cannot withdraw more than the current deposit balance.");
         deposits[einFrom] = deposits[einFrom].sub(amount);
         require(phoenixToken.transfer(to, amount), "Transfer was unsuccessful");
 
-        emit SnowflakeWithdraw(einFrom, to, amount);
+        emit PhoenixIdentityWithdraw(einFrom, to, amount);
     }
 
     function handleAllowance(uint einFrom, uint amount) internal {
@@ -459,7 +459,7 @@ contract Snowflake is Ownable {
         require(identityRegistry.isResolverFor(einFrom, msg.sender), "Resolver has not been set by from tokenholder.");
 
         if (resolverAllowances[einFrom][msg.sender] < amount) {
-            emit SnowflakeInsufficientAllowance(einFrom, msg.sender, resolverAllowances[einFrom][msg.sender], amount);
+            emit PhoenixIdentityInsufficientAllowance(einFrom, msg.sender, resolverAllowances[einFrom][msg.sender], amount);
             revert("Insufficient Allowance");
         }
 
@@ -524,24 +524,24 @@ contract Snowflake is Ownable {
     }
 
     // events
-    event SnowflakeProvidersUpgraded(uint indexed ein, address[] newProviders, address[] oldProviders, address approvingAddress);
+    event PhoenixIdentityProvidersUpgraded(uint indexed ein, address[] newProviders, address[] oldProviders, address approvingAddress);
 
-    event SnowflakeResolverAdded(uint indexed ein, address indexed resolver, uint withdrawAllowance);
-    event SnowflakeResolverAllowanceChanged(uint indexed ein, address indexed resolver, uint withdrawAllowance);
-    event SnowflakeResolverRemoved(uint indexed ein, address indexed resolver);
+    event PhoenixIdentityResolverAdded(uint indexed ein, address indexed resolver, uint withdrawAllowance);
+    event PhoenixIdentityResolverAllowanceChanged(uint indexed ein, address indexed resolver, uint withdrawAllowance);
+    event PhoenixIdentityResolverRemoved(uint indexed ein, address indexed resolver);
 
-    event SnowflakeDeposit(address indexed from, uint indexed einTo, uint amount);
-    event SnowflakeTransfer(uint indexed einFrom, uint indexed einTo, uint amount);
-    event SnowflakeWithdraw(uint indexed einFrom, address indexed to, uint amount);
+    event PhoenixIdentityDeposit(address indexed from, uint indexed einTo, uint amount);
+    event PhoenixIdentityTransfer(uint indexed einFrom, uint indexed einTo, uint amount);
+    event PhoenixIdentityWithdraw(uint indexed einFrom, address indexed to, uint amount);
 
-    event SnowflakeTransferFrom(address indexed resolverFrom);
-    event SnowflakeWithdrawFrom(address indexed resolverFrom);
-    event SnowflakeTransferFromVia(address indexed resolverFrom, uint indexed einTo);
-    event SnowflakeWithdrawFromVia(address indexed resolverFrom, address indexed to);
-    event SnowflakeTransferToVia(address indexed resolverFrom, address indexed via, uint indexed einTo, uint amount);
-    event SnowflakeWithdrawToVia(address indexed resolverFrom, address indexed via, address indexed to, uint amount);
+    event PhoenixIdentityTransferFrom(address indexed resolverFrom);
+    event PhoenixIdentityWithdrawFrom(address indexed resolverFrom);
+    event PhoenixIdentityTransferFromVia(address indexed resolverFrom, uint indexed einTo);
+    event PhoenixIdentityWithdrawFromVia(address indexed resolverFrom, address indexed to);
+    event PhoenixIdentityTransferToVia(address indexed resolverFrom, address indexed via, uint indexed einTo, uint amount);
+    event PhoenixIdentityWithdrawToVia(address indexed resolverFrom, address indexed via, address indexed to, uint amount);
 
-    event SnowflakeInsufficientAllowance(
+    event PhoenixIdentityInsufficientAllowance(
         uint indexed ein, address indexed resolver, uint currentAllowance, uint requestedWithdraw
     );
 }

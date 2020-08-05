@@ -31,14 +31,14 @@ contract('Testing KYC', function (accounts) {
       'I authorize the creation of an Identity on my behalf.',
       user.recoveryAddress,
       user.address,
-      { t: 'address[]', v: [instances.Snowflake.address] },
+      { t: 'address[]', v: [instances.PhoenixIdentity.address] },
       { t: 'address[]', v: [] },
       timestamp
     )
 
     const permission = await sign(permissionString, user.address, user.private)
 
-    await instances.Snowflake.createIdentityDelegated(
+    await instances.PhoenixIdentity.createIdentityDelegated(
       user.recoveryAddress, user.address, [], user.phoenixID, permission.v, permission.r, permission.s, timestamp
     )
 
@@ -47,14 +47,14 @@ contract('Testing KYC', function (accounts) {
     await verifyIdentity(user.identity, instances.IdentityRegistry, {
       recoveryAddress:     user.recoveryAddress,
       associatedAddresses: [user.address],
-      providers:           [instances.Snowflake.address],
+      providers:           [instances.PhoenixIdentity.address],
       resolvers:           [instances.ClientPhoenixAuthentication.address]
     })
   })
 
   describe('Checking Resolver Functionality', async () => {
     it('deploy KYC', async () => {
-      instances.KYC = await KYC.new(instances.Snowflake.address)
+      instances.KYC = await KYC.new(instances.PhoenixIdentity.address)
     })
 
     let identityNode
@@ -66,14 +66,14 @@ contract('Testing KYC', function (accounts) {
     })
 
     it('user can add identity node', async () => {
-      await instances.Snowflake.addResolver(
+      await instances.PhoenixIdentity.addResolver(
         instances.KYC.address, true, web3.utils.toBN(0), identityNode, { from: user.address }
       )
 
       await instances.KYC.addIdentityNode(web3.utils.soliditySha3('test'), { from: user.address })
       await instances.KYC.revokeIdentityNode(web3.utils.soliditySha3('test'), { from: user.address })
 
-      await instances.Snowflake.removeResolver(
+      await instances.PhoenixIdentity.removeResolver(
         instances.KYC.address, true, '0x00', { from: user.address }
       )
     })

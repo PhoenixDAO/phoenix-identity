@@ -4,7 +4,7 @@ const IdentityRegistry = artifacts.require('./_testing/IdentityRegistry.sol')
 const PhoenixToken = artifacts.require('./_testing/PhoenixToken.sol')
 
 const SafeMath = artifacts.require('./zeppelin/math/SafeMath.sol')
-const Snowflake = artifacts.require('./Snowflake.sol')
+const PhoenixIdentity = artifacts.require('./PhoenixIdentity.sol')
 // const Status = artifacts.require('./resolvers/Status.sol')
 
 const StringUtils = artifacts.require('./resolvers/ClientPhoenixAuthentication/StringUtils.sol')
@@ -17,7 +17,7 @@ module.exports = async function (deployer) {
 
   await deployer.deploy(SafeMath)
   deployer.link(SafeMath, PhoenixToken)
-  deployer.link(SafeMath, Snowflake)
+  deployer.link(SafeMath, PhoenixIdentity)
 
   await deployer.deploy(StringUtils)
   deployer.link(StringUtils, ClientPhoenixAuthentication)
@@ -25,8 +25,8 @@ module.exports = async function (deployer) {
 
   // const identityRegistry = await deployer.deploy(IdentityRegistry)
   // const phoenixToken = await deployer.deploy(PhoenixToken)
-  // const snowflake = await deployer.deploy(Snowflake, identityRegistry.address, phoenixToken.address)
+  // const phoenixIdentity = await deployer.deploy(PhoenixIdentity, identityRegistry.address, phoenixToken.address)
   // const oldClientPhoenixAuthentication = await deployer.deploy(OldClientPhoenixAuthentication)
-  // await deployer.deploy(ClientPhoenixAuthentication, snowflake.address, oldClientPhoenixAuthentication.address, 0, 0)
-  // await deployer.deploy(Status, snowflake.address)
+  // await deployer.deploy(ClientPhoenixAuthentication, phoenixIdentity.address, oldClientPhoenixAuthentication.address, 0, 0)
+  // await deployer.deploy(Status, phoenixIdentity.address)
 }

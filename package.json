@@ -1,7 +1,7 @@
 {
-  "name": "snowflake",
+  "name": "phoenixidentity",
   "version": "1.0.0",
-  "description": "Phoenix Snowflake identity protocol",
+  "description": "Phoenix PhoenixIdentity identity protocol",
   "scripts": {
     "build": "npm run buidl",
     "buidl": "rm -rf build/ && npx truffle compile",

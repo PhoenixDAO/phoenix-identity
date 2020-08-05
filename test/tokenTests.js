@@ -4,11 +4,11 @@ const { verifyIdentity } = require('./utilities')
 const ViaSample = artifacts.require('./samples/Via.sol')
 const ResolverSample = artifacts.require('./samples/Resolver.sol')
 
-async function verifySnowflakeBalances (amounts) {
-  let snowflakeBalance
+async function verifyPhoenixIdentityBalances (amounts) {
+  let phoenixIdentityBalance
   for (let i = 0; i < 2; i++) {
-    snowflakeBalance = await instances.Snowflake.deposits(users[i].identity)
-    assert.isTrue(snowflakeBalance.eq(amounts[i]), `Incorrect balance for identity ${users[i].identity}`)
+    phoenixIdentityBalance = await instances.PhoenixIdentity.deposits(users[i].identity)
+    assert.isTrue(phoenixIdentityBalance.eq(amounts[i]), `Incorrect balance for identity ${users[i].identity}`)
   }
 }
 
@@ -23,7 +23,7 @@ async function verifyPhoenixBalances (accounts, amounts) {
 let instances
 let users
 let user
-contract('Testing Snowflake Token Functionality', function (accounts) {
+contract('Testing PhoenixIdentity Token Functionality', function (accounts) {
   users = [
     {
       address: accounts[1],
@@ -45,19 +45,19 @@ contract('Testing Snowflake Token Functionality', function (accounts) {
     instances = await common.initialize(accounts[0], [])
   })
 
-  describe('Set up Snowflakes', () => {
+  describe('Set up PhoenixIdentitys', () => {
     it('Identities can be created', async function () {
       for (let i = 0; i < 2; i++) {
         const user = users[i]
         await instances.IdentityRegistry.createIdentity(
-          user.address, [instances.Snowflake.address], [], { from: user.address }
+          user.address, [instances.PhoenixIdentity.address], [], { from: user.address }
         )
         user.identity = web3.utils.toBN(i + 1)
 
         await verifyIdentity(user.identity, instances.IdentityRegistry, {
           recoveryAddress:     user.address,
           associatedAddresses: [user.address],
-          providers:           [instances.Snowflake.address],
+          providers:           [instances.PhoenixIdentity.address],
           resolvers:           []
         })
       }
@@ -69,7 +69,7 @@ contract('Testing Snowflake Token Functionality', function (accounts) {
     const depositAmount = web3.utils.toBN(50).mul(web3.utils.toBN(1e18))
     it('cannot deposit PHOENIX without an EIN', async () => {
       await instances.PhoenixToken.approveAndCall(
-        instances.Snowflake.address, depositAmount, '0x00', { from: accounts[0] }
+        instances.PhoenixIdentity.address, depositAmount, '0x00', { from: accounts[0] }
       )
         .then(() => assert.fail('able to deposit', 'transaction should fail'))
         .catch(error => {
@@ -83,65 +83,65 @@ contract('Testing Snowflake Token Functionality', function (accounts) {
 
     it('owner can deposit 50 PHOENIX to an EIN', async () => {
       await instances.PhoenixToken.approveAndCall(
-        instances.Snowflake.address, depositAmount, web3.eth.abi.encodeParameter('uint256', user.identity.toString()),
+        instances.PhoenixIdentity.address, depositAmount, web3.eth.abi.encodeParameter('uint256', user.identity.toString()),
         { from: accounts[0] }
       )
-      await verifySnowflakeBalances([depositAmount, web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([depositAmount, web3.utils.toBN(0)])
     })
 
     it('can deposit 50 PHOENIX to own EIN', async () => {
       await instances.PhoenixToken.approveAndCall(
-        instances.Snowflake.address, depositAmount, '0x00', { from: user.address }
+        instances.PhoenixIdentity.address, depositAmount, '0x00', { from: user.address }
       )
-      await verifySnowflakeBalances([depositAmount.mul(web3.utils.toBN(2)), web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([depositAmount.mul(web3.utils.toBN(2)), web3.utils.toBN(0)])
     })
   })
 
   describe('Testing self initiated methods', async () => {
     const startingAmount = web3.utils.toBN(100).mul(web3.utils.toBN(1e18))
     const transferAmount = web3.utils.toBN(1e18)
-    it('can transfer PHOENIX from 1 snowflake to another', async () => {
-      await instances.Snowflake.transferSnowflakeBalance(users[1].identity, transferAmount, { from: users[0].address })
-      await verifySnowflakeBalances([startingAmount.sub(transferAmount), transferAmount])
+    it('can transfer PHOENIX from 1 phoenixIdentity to another', async () => {
+      await instances.PhoenixIdentity.transferPhoenixIdentityBalance(users[1].identity, transferAmount, { from: users[0].address })
+      await verifyPhoenixIdentityBalances([startingAmount.sub(transferAmount), transferAmount])
     })
 
     const withdrawAmount = web3.utils.toBN(1e18)
-    it('can withdraw PHOENIX from from a snowflake', async () => {
-      await instances.Snowflake.withdrawSnowflakeBalance(users[1].address, transferAmount, { from: users[1].address })
-      await verifySnowflakeBalances([startingAmount.sub(transferAmount), web3.utils.toBN(0)])
+    it('can withdraw PHOENIX from from a phoenixIdentity', async () => {
+      await instances.PhoenixIdentity.withdrawPhoenixIdentityBalance(users[1].address, transferAmount, { from: users[1].address })
+      await verifyPhoenixIdentityBalances([startingAmount.sub(transferAmount), web3.utils.toBN(0)])
       await verifyPhoenixBalances([users[1].address], [withdrawAmount])
     })
 
     it('reset', async () => {
       await instances.PhoenixToken.approveAndCall(
-        instances.Snowflake.address, withdrawAmount, web3.eth.abi.encodeParameter('uint', users[0].identity.toString()),
+        instances.PhoenixIdentity.address, withdrawAmount, web3.eth.abi.encodeParameter('uint', users[0].identity.toString()),
         { from: users[1].address }
       )
-      await verifySnowflakeBalances([startingAmount, web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([startingAmount, web3.utils.toBN(0)])
     })
   })
 
   describe('Testing resolver initiated methods', async () => {
     it('deploy sample resolver', async () => {
-      instances.ResolverSample = await ResolverSample.new(instances.Snowflake.address, { from: accounts[0] })
+      instances.ResolverSample = await ResolverSample.new(instances.PhoenixIdentity.address, { from: accounts[0] })
     })
 
     user = users[0]
     const startingAmount = web3.utils.toBN(100).mul(web3.utils.toBN(1e18))
     const escrowAmount = startingAmount.div(web3.utils.toBN(2))
     it('add it to the identity', async () => {
-      await instances.Snowflake.addResolver(
+      await instances.PhoenixIdentity.addResolver(
         instances.ResolverSample.address, true, startingAmount, '0x00', { from: user.address }
       )
 
-      await verifySnowflakeBalances([startingAmount.sub(escrowAmount), web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([startingAmount.sub(escrowAmount), web3.utils.toBN(0)])
       await verifyPhoenixBalances([instances.ResolverSample.address], [escrowAmount])
     })
 
     const allowAndCallTransferAmount = web3.utils.toBN(1e18)
     it('resolver could use allowAndCall', async () => {
       const methodID = web3.utils
-        .soliditySha3('transferSnowflakeBalanceFromAllowAndCall(uint256,uint256,uint256)')
+        .soliditySha3('transferPhoenixIdentityBalanceFromAllowAndCall(uint256,uint256,uint256)')
         .substring(0, 10)
 
       const encodedArgs = [
@@ -151,51 +151,51 @@ contract('Testing Snowflake Token Functionality', function (accounts) {
       ]
       const data = `${methodID}${encodedArgs.join('')}`
 
-      await instances.Snowflake.allowAndCall.call(
+      await instances.PhoenixIdentity.allowAndCall.call(
         instances.ResolverSample.address, transferAmount, data, { from: users[0].address }
       )
     })
 
     const transferAmount = web3.utils.toBN(1e18)
     it('resolver can transfer balances from', async () => {
-      await instances.ResolverSample.transferSnowflakeBalanceFrom(
+      await instances.ResolverSample.transferPhoenixIdentityBalanceFrom(
         users[1].identity, transferAmount, { from: users[0].address }
       )
-      const allowance = await instances.Snowflake.resolverAllowances.call(
+      const allowance = await instances.PhoenixIdentity.resolverAllowances.call(
         user.identity, instances.ResolverSample.address
       )
       assert.isTrue(allowance.eq(escrowAmount.sub(transferAmount)), 'Allowance not updated.')
-      await verifySnowflakeBalances([startingAmount.sub(escrowAmount).sub(transferAmount), transferAmount])
+      await verifyPhoenixIdentityBalances([startingAmount.sub(escrowAmount).sub(transferAmount), transferAmount])
     })
 
     it('reset', async () => {
-      await instances.Snowflake.transferSnowflakeBalance(user.identity, transferAmount, { from: users[1].address })
-      await verifySnowflakeBalances([startingAmount.sub(escrowAmount), web3.utils.toBN(0)])
+      await instances.PhoenixIdentity.transferPhoenixIdentityBalance(user.identity, transferAmount, { from: users[1].address })
+      await verifyPhoenixIdentityBalances([startingAmount.sub(escrowAmount), web3.utils.toBN(0)])
     })
 
     const withdrawAmount = web3.utils.toBN(1e18)
     it('resolver can withdraw balances from', async () => {
-      await instances.ResolverSample.withdrawSnowflakeBalanceFrom(user.address, withdrawAmount, { from: user.address })
-      const allowance = await instances.Snowflake.resolverAllowances.call(
+      await instances.ResolverSample.withdrawPhoenixIdentityBalanceFrom(user.address, withdrawAmount, { from: user.address })
+      const allowance = await instances.PhoenixIdentity.resolverAllowances.call(
         user.identity, instances.ResolverSample.address
       )
       assert.isTrue(allowance.eq(escrowAmount.sub(transferAmount).sub(withdrawAmount)), 'Allowance not updated.')
-      await verifySnowflakeBalances([startingAmount.sub(escrowAmount).sub(withdrawAmount), web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([startingAmount.sub(escrowAmount).sub(withdrawAmount), web3.utils.toBN(0)])
       await verifyPhoenixBalances([user.address], [withdrawAmount])
     })
 
     it('reset', async () => {
       await instances.PhoenixToken.approveAndCall(
-        instances.Snowflake.address, withdrawAmount, web3.eth.abi.encodeParameter('uint', user.identity.toString()),
+        instances.PhoenixIdentity.address, withdrawAmount, web3.eth.abi.encodeParameter('uint', user.identity.toString()),
         { from: user.address }
       )
-      await verifySnowflakeBalances([startingAmount.sub(escrowAmount), web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([startingAmount.sub(escrowAmount), web3.utils.toBN(0)])
     })
   })
 
   describe('Testing resolver initiated methods -- via', async () => {
     it('deploy sample via and fund it', async () => {
-      instances.ViaSample = await ViaSample.new(instances.Snowflake.address, { from: accounts[0] })
+      instances.ViaSample = await ViaSample.new(instances.PhoenixIdentity.address, { from: accounts[0] })
       await instances.ViaSample.fund({ from: accounts[0], value: web3.utils.toWei('4', 'ether') })
     })
 
@@ -203,14 +203,14 @@ contract('Testing Snowflake Token Functionality', function (accounts) {
     const startingAllowance = web3.utils.toBN(48).mul(web3.utils.toBN(1e18))
     const transferAmount = web3.utils.toBN(10).mul(web3.utils.toBN(1e18))
     it('resolver can transfer balances from via', async () => {
-      await instances.ResolverSample.transferSnowflakeBalanceFromVia(
+      await instances.ResolverSample.transferPhoenixIdentityBalanceFromVia(
         instances.ViaSample.address, user.identity, transferAmount, { from: user.address }
       )
-      const allowance = await instances.Snowflake.resolverAllowances.call(
+      const allowance = await instances.PhoenixIdentity.resolverAllowances.call(
         user.identity, instances.ResolverSample.address
       )
       assert.isTrue(allowance.eq(startingAllowance.sub(transferAmount)), 'Allowance not updated.')
-      await verifySnowflakeBalances([startingAmount.sub(transferAmount), web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([startingAmount.sub(transferAmount), web3.utils.toBN(0)])
 
       // 1 because we sent 10 phoenix := 1 eth as defined in the via contract
       const balance = await instances.ViaSample.balances(user.identity)
@@ -219,14 +219,14 @@ contract('Testing Snowflake Token Functionality', function (accounts) {
 
     const withdrawAmount = web3.utils.toBN(10).mul(web3.utils.toBN(1e18))
     it('resolver can withdraw balances from via', async () => {
-      await instances.ResolverSample.withdrawSnowflakeBalanceFromVia(
+      await instances.ResolverSample.withdrawPhoenixIdentityBalanceFromVia(
         instances.ViaSample.address, user.address, withdrawAmount, { from: user.address }
       )
-      const allowance = await instances.Snowflake.resolverAllowances.call(
+      const allowance = await instances.PhoenixIdentity.resolverAllowances.call(
         user.identity, instances.ResolverSample.address
       )
       assert.isTrue(allowance.eq(startingAllowance.sub(transferAmount).sub(withdrawAmount)), 'Allowance not updated.')
-      await verifySnowflakeBalances([startingAmount.sub(transferAmount).sub(withdrawAmount), web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([startingAmount.sub(transferAmount).sub(withdrawAmount), web3.utils.toBN(0)])
     })
   })
 
@@ -235,13 +235,13 @@ contract('Testing Snowflake Token Functionality', function (accounts) {
     const startingAmount = web3.utils.toBN(30).mul(web3.utils.toBN(1e18))
     it('resolver can transfer escrowed balances to', async () => {
       await instances.ResolverSample._transferPhoenixBalanceTo(user.identity, transferAmount)
-      await verifySnowflakeBalances([startingAmount.add(transferAmount), web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([startingAmount.add(transferAmount), web3.utils.toBN(0)])
     })
 
     const withdrawAmount = web3.utils.toBN(5e18)
     it('resolver can withdraw escrowed balances to', async () => {
       await instances.ResolverSample._withdrawPhoenixBalanceTo(user.address, withdrawAmount)
-      await verifySnowflakeBalances([startingAmount.add(transferAmount), web3.utils.toBN(0)])
+      await verifyPhoenixIdentityBalances([startingAmount.add(transferAmount), web3.utils.toBN(0)])
       await verifyPhoenixBalances([user.address], [withdrawAmount])
     })
   })

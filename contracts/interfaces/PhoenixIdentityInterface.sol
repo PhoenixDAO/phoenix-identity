@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-interface SnowflakeInterface {
+interface PhoenixIdentityInterface {
     function deposits(uint) external view returns (uint);
     function resolverAllowances(uint, address) external view returns (uint);
 
@@ -25,12 +25,12 @@ interface SnowflakeInterface {
         address approvingAddress, address[] calldata newProviders, address[] calldata oldProviders,
         uint8[2] calldata v, bytes32[2] calldata r, bytes32[2] calldata s, uint[2] calldata timestamp
     ) external;
-    function addResolver(address resolver, bool isSnowflake, uint withdrawAllowance, bytes calldata extraData) external;
+    function addResolver(address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes calldata extraData) external;
     function addResolverAsProvider(
-        uint ein, address resolver, bool isSnowflake, uint withdrawAllowance, bytes calldata extraData
+        uint ein, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes calldata extraData
     ) external;
     function addResolverFor(
-        address approvingAddress, address resolver, bool isSnowflake, uint withdrawAllowance, bytes calldata extraData,
+        address approvingAddress, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes calldata extraData,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     ) external;
     function changeResolverAllowances(address[] calldata resolvers, uint[] calldata withdrawAllowances) external;
@@ -38,9 +38,9 @@ interface SnowflakeInterface {
         address approvingAddress, address[] calldata resolvers, uint[] calldata withdrawAllowances,
         uint8 v, bytes32 r, bytes32 s
     ) external;
-    function removeResolver(address resolver, bool isSnowflake, bytes calldata extraData) external;
+    function removeResolver(address resolver, bool isPhoenixIdentity, bytes calldata extraData) external;
     function removeResolverFor(
-        address approvingAddress, address resolver, bool isSnowflake, bytes calldata extraData,
+        address approvingAddress, address resolver, bool isPhoenixIdentity, bytes calldata extraData,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     ) external;
 
@@ -48,12 +48,12 @@ interface SnowflakeInterface {
         address approvingAddress, address newRecoveryAddress, uint8 v, bytes32 r, bytes32 s
     ) external;
 
-    function transferSnowflakeBalance(uint einTo, uint amount) external;
-    function withdrawSnowflakeBalance(address to, uint amount) external;
-    function transferSnowflakeBalanceFrom(uint einFrom, uint einTo, uint amount) external;
-    function withdrawSnowflakeBalanceFrom(uint einFrom, address to, uint amount) external;
-    function transferSnowflakeBalanceFromVia(uint einFrom, address via, uint einTo, uint amount, bytes calldata _bytes)
+    function transferPhoenixIdentityBalance(uint einTo, uint amount) external;
+    function withdrawPhoenixIdentityBalance(address to, uint amount) external;
+    function transferPhoenixIdentityBalanceFrom(uint einFrom, uint einTo, uint amount) external;
+    function withdrawPhoenixIdentityBalanceFrom(uint einFrom, address to, uint amount) external;
+    function transferPhoenixIdentityBalanceFromVia(uint einFrom, address via, uint einTo, uint amount, bytes calldata _bytes)
         external;
-    function withdrawSnowflakeBalanceFromVia(uint einFrom, address via, address to, uint amount, bytes calldata _bytes)
+    function withdrawPhoenixIdentityBalanceFromVia(uint einFrom, address via, address to, uint amount, bytes calldata _bytes)
         external;
 }

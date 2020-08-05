@@ -3,7 +3,7 @@ const { sign, verifyIdentity } = require('./utilities')
 
 let user
 let instances
-contract('Testing Snowflake', function (accounts) {
+contract('Testing PhoenixIdentity', function (accounts) {
   const users = [
     {
       phoenixID: 'abc',
@@ -29,7 +29,7 @@ contract('Testing Snowflake', function (accounts) {
     instances = await common.initialize(accounts[0], [])
   })
 
-  describe('Test Snowflake', async () => {
+  describe('Test PhoenixIdentity', async () => {
     it('Identity can be created', async function () {
       user = users[0]
       const timestamp = Math.round(new Date() / 1000) - 1
@@ -38,14 +38,14 @@ contract('Testing Snowflake', function (accounts) {
         'I authorize the creation of an Identity on my behalf.',
         user.recoveryAddress,
         user.address,
-        { t: 'address[]', v: [instances.Snowflake.address] },
+        { t: 'address[]', v: [instances.PhoenixIdentity.address] },
         { t: 'address[]', v: [] },
         timestamp
       )
 
       const permission = await sign(permissionString, user.address, user.private)
 
-      await instances.Snowflake.createIdentityDelegated(
+      await instances.PhoenixIdentity.createIdentityDelegated(
         user.recoveryAddress, user.address, [], user.phoenixID, permission.v, permission.r, permission.s, timestamp
       )
 
@@ -54,7 +54,7 @@ contract('Testing Snowflake', function (accounts) {
       await verifyIdentity(user.identity, instances.IdentityRegistry, {
         recoveryAddress:     user.recoveryAddress,
         associatedAddresses: [user.address],
-        providers:           [instances.Snowflake.address],
+        providers:           [instances.PhoenixIdentity.address],
         resolvers:           [instances.ClientPhoenixAuthentication.address]
       })
     })
@@ -74,14 +74,14 @@ contract('Testing Snowflake', function (accounts) {
         'I authorize the creation of an Identity on my behalf.',
         user.recoveryAddress,
         user.address,
-        { t: 'address[]', v: [instances.Snowflake.address] },
+        { t: 'address[]', v: [instances.PhoenixIdentity.address] },
         { t: 'address[]', v: [] },
         timestamp
       )
 
       const permission = await sign(permissionString, user.address, user.private)
 
-      await instances.Snowflake.createIdentityDelegated(
+      await instances.PhoenixIdentity.createIdentityDelegated(
         user.recoveryAddress, user.address, [], user.phoenixID, permission.v, permission.r, permission.s, timestamp,
         { from: user.address }
       )
@@ -97,14 +97,14 @@ contract('Testing Snowflake', function (accounts) {
         'I authorize the creation of an Identity on my behalf.',
         user.recoveryAddress,
         user.address,
-        { t: 'address[]', v: [instances.Snowflake.address] },
+        { t: 'address[]', v: [instances.PhoenixIdentity.address] },
         { t: 'address[]', v: [] },
         timestamp
       )
 
       const permission = await sign(permissionString, user.address, user.private)
 
-      await instances.Snowflake.createIdentityDelegated.call(
+      await instances.PhoenixIdentity.createIdentityDelegated.call(
         user.recoveryAddress, user.address, [], user.phoenixID, permission.v, permission.r, permission.s, timestamp
       )
     })

@@ -1,24 +1,24 @@
 pragma solidity ^0.5.0;
 
-import "../SnowflakeResolver.sol";
+import "../PhoenixIdentityResolver.sol";
 import "../interfaces/IdentityRegistryInterface.sol";
-import "../interfaces/SnowflakeInterface.sol";
+import "../interfaces/PhoenixIdentityInterface.sol";
 
-contract PhoenixKYC is SnowflakeResolver {
+contract PhoenixKYC is PhoenixIdentityResolver {
     IdentityRegistryInterface identityRegistry;
 
-    constructor (address snowflakeAddress)
-        SnowflakeResolver("Phoenix KYC", "Perform KYC through Phoenix.", snowflakeAddress, true, true) public
+    constructor (address phoenixIdentityAddress)
+        PhoenixIdentityResolver("Phoenix KYC", "Perform KYC through Phoenix.", phoenixIdentityAddress, true, true) public
     {
-        setSnowflakeAddress(snowflakeAddress);
+        setPhoenixIdentityAddress(phoenixIdentityAddress);
     }
 
-    // set the snowflake address and identity registry contract wrappers
-    function setSnowflakeAddress(address snowflakeAddress) public onlyOwner() {
-        super.setSnowflakeAddress(snowflakeAddress);
+    // set the phoenixIdentity address and identity registry contract wrappers
+    function setPhoenixIdentityAddress(address phoenixIdentityAddress) public onlyOwner() {
+        super.setPhoenixIdentityAddress(phoenixIdentityAddress);
 
-        SnowflakeInterface snowflake = SnowflakeInterface(snowflakeAddress);
-        identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
+        PhoenixIdentityInterface phoenixIdentity = PhoenixIdentityInterface(phoenixIdentityAddress);
+        identityRegistry = IdentityRegistryInterface(phoenixIdentity.identityRegistryAddress());
     }
 
     // allows identity nodes to declare themselves
@@ -34,7 +34,7 @@ contract PhoenixKYC is SnowflakeResolver {
     }
 
     // implement addition function
-    function onAddition(uint ein, uint, bytes memory extraData) public senderIsSnowflake() returns (bool) {
+    function onAddition(uint ein, uint, bytes memory extraData) public senderIsPhoenixIdentity() returns (bool) {
         emit PhoenixKYCSignUp(ein);
         (bytes32 identityNode) = abi.decode(extraData, (bytes32));
         addIdentityNode(ein, identityNode);
@@ -48,7 +48,7 @@ contract PhoenixKYC is SnowflakeResolver {
 
     // allows providers to declare an identity node for the sender's EIN
     function addIdentityNode(uint ein, bytes32 identityNode) public {
-        require(identityRegistry.isProviderFor(ein, msg.sender), "Snowflake is not a Provider for the passed EIN.");
+        require(identityRegistry.isProviderFor(ein, msg.sender), "PhoenixIdentity is not a Provider for the passed EIN.");
         _addIdentityNode(ein, identityNode);
     }
 
@@ -64,7 +64,7 @@ contract PhoenixKYC is SnowflakeResolver {
 
     // allows providers to revoke an identity node for the sender's EIN
     function revokeIdentityNode(uint ein, bytes32 identityNode) public {
-        require(identityRegistry.isProviderFor(ein, msg.sender), "Snowflake is not a Provider for the passed EIN.");
+        require(identityRegistry.isProviderFor(ein, msg.sender), "PhoenixIdentity is not a Provider for the passed EIN.");
         _revokeIdentityNode(ein, identityNode);
     }
 
@@ -74,7 +74,7 @@ contract PhoenixKYC is SnowflakeResolver {
     }
 
     // implement removal function
-    function onRemoval(uint ein, bytes memory) public senderIsSnowflake() returns (bool) {
+    function onRemoval(uint ein, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
         emit PhoenixKYCRemoval(ein);
         return true;
     }

@@ -44,17 +44,17 @@ contract PhoenixIdentityResolver is Ownable {
     // if callOnAddition is true, onAddition is called every time a user adds the contract as a resolver
     // this implementation **must** use the senderIsPhoenixIdentity modifier
     // returning false will disallow users from adding the contract as a resolver
-    function onAddition(uint ein, uint allowance, bytes memory extraData) public returns (bool);
+    function onAddition(uint PHNX_ID, uint allowance, bytes memory extraData) public returns (bool);
 
     // if callOnRemoval is true, onRemoval is called every time a user removes the contract as a resolver
     // this function **must** use the senderIsPhoenixIdentity modifier
     // returning false soft prevents users from removing the contract as a resolver
     // however, note that they can force remove the resolver, bypassing onRemoval
-    function onRemoval(uint ein, bytes memory extraData) public returns (bool);
+    function onRemoval(uint PHNX_ID, bytes memory extraData) public returns (bool);
 
-    function transferPhoenixBalanceTo(uint einTo, uint amount) internal {
+    function transferPhoenixBalanceTo(uint PHNX_IDTo, uint amount) internal {
         PhoenixInterface phoenix = PhoenixInterface(PhoenixIdentityInterface(phoenixIdentityAddress).phoenixTokenAddress());
-        require(phoenix.approveAndCall(phoenixIdentityAddress, amount, abi.encode(einTo)), "Unsuccessful approveAndCall.");
+        require(phoenix.approveAndCall(phoenixIdentityAddress, amount, abi.encode(PHNX_IDTo)), "Unsuccessful approveAndCall.");
     }
 
     function withdrawPhoenixBalanceTo(address to, uint amount) internal {
@@ -62,11 +62,11 @@ contract PhoenixIdentityResolver is Ownable {
         require(phoenix.transfer(to, amount), "Unsuccessful transfer.");
     }
 
-    function transferPhoenixBalanceToVia(address via, uint einTo, uint amount, bytes memory phoenixIdentityCallBytes) internal {
+    function transferPhoenixBalanceToVia(address via, uint PHNX_IDTo, uint amount, bytes memory phoenixIdentityCallBytes) internal {
         PhoenixInterface phoenix = PhoenixInterface(PhoenixIdentityInterface(phoenixIdentityAddress).phoenixTokenAddress());
         require(
             phoenix.approveAndCall(
-                phoenixIdentityAddress, amount, abi.encode(true, address(this), via, einTo, phoenixIdentityCallBytes)
+                phoenixIdentityAddress, amount, abi.encode(true, address(this), via, PHNX_IDTo, phoenixIdentityCallBytes)
             ),
             "Unsuccessful approveAndCall."
         );

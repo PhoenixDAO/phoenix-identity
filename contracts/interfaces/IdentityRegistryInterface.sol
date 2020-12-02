@@ -5,24 +5,24 @@ interface IdentityRegistryInterface {
         external pure returns (bool);
 
     // Identity View Functions /////////////////////////////////////////////////////////////////////////////////////////
-    function identityExists(uint ein) external view returns (bool);
+    function identityExists(uint PHNX_ID) external view returns (bool);
     function hasIdentity(address _address) external view returns (bool);
-    function getEIN(address _address) external view returns (uint ein);
-    function isAssociatedAddressFor(uint ein, address _address) external view returns (bool);
-    function isProviderFor(uint ein, address provider) external view returns (bool);
-    function isResolverFor(uint ein, address resolver) external view returns (bool);
-    function getIdentity(uint ein) external view returns (
+    function getPHNX_ID(address _address) external view returns (uint PHNX_ID);
+    function isAssociatedAddressFor(uint PHNX_ID, address _address) external view returns (bool);
+    function isProviderFor(uint PHNX_ID, address provider) external view returns (bool);
+    function isResolverFor(uint PHNX_ID, address resolver) external view returns (bool);
+    function getIdentity(uint PHNX_ID) external view returns (
         address recoveryAddress,
         address[] memory associatedAddresses, address[] memory providers, address[] memory resolvers
     );
 
     // Identity Management Functions ///////////////////////////////////////////////////////////////////////////////////
     function createIdentity(address recoveryAddress, address[] calldata providers, address[] calldata resolvers)
-        external returns (uint ein);
+        external returns (uint PHNX_ID);
     function createIdentityDelegated(
         address recoveryAddress, address associatedAddress, address[] calldata providers, address[] calldata resolvers,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
-    ) external returns (uint ein);
+    ) external returns (uint PHNX_ID);
     function addAssociatedAddress(
         address approvingAddress, address addressToAdd, uint8 v, bytes32 r, bytes32 s, uint timestamp
     ) external;
@@ -34,20 +34,20 @@ interface IdentityRegistryInterface {
     function removeAssociatedAddressDelegated(address addressToRemove, uint8 v, bytes32 r, bytes32 s, uint timestamp)
         external;
     function addProviders(address[] calldata providers) external;
-    function addProvidersFor(uint ein, address[] calldata providers) external;
+    function addProvidersFor(uint PHNX_ID, address[] calldata providers) external;
     function removeProviders(address[] calldata providers) external;
-    function removeProvidersFor(uint ein, address[] calldata providers) external;
+    function removeProvidersFor(uint PHNX_ID, address[] calldata providers) external;
     function addResolvers(address[] calldata resolvers) external;
-    function addResolversFor(uint ein, address[] calldata resolvers) external;
+    function addResolversFor(uint PHNX_ID, address[] calldata resolvers) external;
     function removeResolvers(address[] calldata resolvers) external;
-    function removeResolversFor(uint ein, address[] calldata resolvers) external;
+    function removeResolversFor(uint PHNX_ID, address[] calldata resolvers) external;
 
     // Recovery Management Functions ///////////////////////////////////////////////////////////////////////////////////
     function triggerRecoveryAddressChange(address newRecoveryAddress) external;
-    function triggerRecoveryAddressChangeFor(uint ein, address newRecoveryAddress) external;
-    function triggerRecovery(uint ein, address newAssociatedAddress, uint8 v, bytes32 r, bytes32 s, uint timestamp)
+    function triggerRecoveryAddressChangeFor(uint PHNX_ID, address newRecoveryAddress) external;
+    function triggerRecovery(uint PHNX_ID, address newAssociatedAddress, uint8 v, bytes32 r, bytes32 s, uint timestamp)
         external;
     function triggerDestruction(
-        uint ein, address[] calldata firstChunk, address[] calldata lastChunk, bool resetResolvers
+        uint PHNX_ID, address[] calldata firstChunk, address[] calldata lastChunk, bool resetResolvers
     ) external;
 }

@@ -25,11 +25,11 @@ contract PhoenixIdentityVia is Ownable {
     // that phoenix tokens were actually sent to this smart contract prior to the phoenixIdentityCall. Further accounting checks
     // of course make this possible to check, but since this is tedious and a low value-add,
     // it's officially not recommended
-    function phoenixIdentityCall(address resolver, uint einFrom, uint einTo, uint amount, bytes memory phoenixIdentityCallBytes)
+    function phoenixIdentityCall(address resolver, uint PHNX_IDFrom, uint PHNX_IDTo, uint amount, bytes memory phoenixIdentityCallBytes)
         public;
     function phoenixIdentityCall(
-        address resolver, uint einFrom, address payable to, uint amount, bytes memory phoenixIdentityCallBytes
+        address resolver, uint PHNX_IDFrom, address payable to, uint amount, bytes memory phoenixIdentityCallBytes
     ) public;
-    function phoenixIdentityCall(address resolver, uint einTo, uint amount, bytes memory phoenixIdentityCallBytes) public;
+    function phoenixIdentityCall(address resolver, uint PHNX_IDTo, uint amount, bytes memory phoenixIdentityCallBytes) public;
     function phoenixIdentityCall(address resolver, address payable to, uint amount, bytes memory phoenixIdentityCallBytes) public;
 }

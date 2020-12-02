@@ -34,48 +34,48 @@ contract PhoenixKYC is PhoenixIdentityResolver {
     }
 
     // implement addition function
-    function onAddition(uint ein, uint, bytes memory extraData) public senderIsPhoenixIdentity() returns (bool) {
-        emit PhoenixKYCSignUp(ein);
+    function onAddition(uint PHNX_ID, uint, bytes memory extraData) public senderIsPhoenixIdentity() returns (bool) {
+        emit PhoenixKYCSignUp(PHNX_ID);
         (bytes32 identityNode) = abi.decode(extraData, (bytes32));
-        addIdentityNode(ein, identityNode);
+        addIdentityNode(PHNX_ID, identityNode);
         return true;
     }
 
-    // declares an identity node for the sender's EIN
+    // declares an identity node for the sender's PHNX_ID
     function addIdentityNode(bytes32 identityNode) public {
-        _addIdentityNode(identityRegistry.getEIN(msg.sender), identityNode);
+        _addIdentityNode(identityRegistry.getPHNX_ID(msg.sender), identityNode);
     }
 
-    // allows providers to declare an identity node for the sender's EIN
-    function addIdentityNode(uint ein, bytes32 identityNode) public {
-        require(identityRegistry.isProviderFor(ein, msg.sender), "PhoenixIdentity is not a Provider for the passed EIN.");
-        _addIdentityNode(ein, identityNode);
+    // allows providers to declare an identity node for the sender's PHNX_ID
+    function addIdentityNode(uint PHNX_ID, bytes32 identityNode) public {
+        require(identityRegistry.isProviderFor(PHNX_ID, msg.sender), "PhoenixIdentity is not a Provider for the passed PHNX_ID.");
+        _addIdentityNode(PHNX_ID, identityNode);
     }
 
-    function _addIdentityNode (uint ein, bytes32 identityNode) private {
-        require(identityRegistry.isResolverFor(ein, address(this)), "The EIN has not set this resolver.");
-        emit PhoenixKYCIdentityNodeAdded(ein, identityNode);
+    function _addIdentityNode (uint PHNX_ID, bytes32 identityNode) private {
+        require(identityRegistry.isResolverFor(PHNX_ID, address(this)), "The PHNX_ID has not set this resolver.");
+        emit PhoenixKYCIdentityNodeAdded(PHNX_ID, identityNode);
     }
 
-    // revokes an identity node for the sender's EIN
+    // revokes an identity node for the sender's PHNX_ID
     function revokeIdentityNode(bytes32 identityNode) public {
-        _revokeIdentityNode(identityRegistry.getEIN(msg.sender), identityNode);
+        _revokeIdentityNode(identityRegistry.getPHNX_ID(msg.sender), identityNode);
     }
 
-    // allows providers to revoke an identity node for the sender's EIN
-    function revokeIdentityNode(uint ein, bytes32 identityNode) public {
-        require(identityRegistry.isProviderFor(ein, msg.sender), "PhoenixIdentity is not a Provider for the passed EIN.");
-        _revokeIdentityNode(ein, identityNode);
+    // allows providers to revoke an identity node for the sender's PHNX_ID
+    function revokeIdentityNode(uint PHNX_ID, bytes32 identityNode) public {
+        require(identityRegistry.isProviderFor(PHNX_ID, msg.sender), "PhoenixIdentity is not a Provider for the passed PHNX_ID.");
+        _revokeIdentityNode(PHNX_ID, identityNode);
     }
 
-    function _revokeIdentityNode (uint ein, bytes32 identityNode) private {
-        require(identityRegistry.isResolverFor(ein, address(this)), "The EIN has not set this resolver.");
-        emit PhoenixKYCIdentityNodeRevoked(ein, identityNode);
+    function _revokeIdentityNode (uint PHNX_ID, bytes32 identityNode) private {
+        require(identityRegistry.isResolverFor(PHNX_ID, address(this)), "The PHNX_ID has not set this resolver.");
+        emit PhoenixKYCIdentityNodeRevoked(PHNX_ID, identityNode);
     }
 
     // implement removal function
-    function onRemoval(uint ein, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
-        emit PhoenixKYCRemoval(ein);
+    function onRemoval(uint PHNX_ID, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
+        emit PhoenixKYCRemoval(PHNX_ID);
         return true;
     }
 
@@ -84,8 +84,8 @@ contract PhoenixKYC is PhoenixIdentityResolver {
     );
     event PhoenixKYCUpdateIdentityNode(bytes32 indexed identityNode, bytes extraData);
 
-    event PhoenixKYCSignUp(uint ein);
-    event PhoenixKYCIdentityNodeAdded(uint indexed ein, bytes32 indexed identityNode);
-    event PhoenixKYCIdentityNodeRevoked(uint indexed ein, bytes32 indexed identityNode);
-    event PhoenixKYCRemoval(uint ein);
+    event PhoenixKYCSignUp(uint PHNX_ID);
+    event PhoenixKYCIdentityNodeAdded(uint indexed PHNX_ID, bytes32 indexed identityNode);
+    event PhoenixKYCIdentityNodeRevoked(uint indexed PHNX_ID, bytes32 indexed identityNode);
+    event PhoenixKYCRemoval(uint PHNX_ID);
 }

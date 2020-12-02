@@ -14,7 +14,7 @@ interface PhoenixIdentityInterface {
     function createIdentityDelegated(
         address recoveryAddress, address associatedAddress, address[] calldata providers, string calldata casedPhoenixId,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
-    ) external returns (uint ein);
+    ) external returns (uint PHNX_ID);
     function addProvidersFor(
         address approvingAddress, address[] calldata providers, uint8 v, bytes32 r, bytes32 s, uint timestamp
     ) external;
@@ -27,7 +27,7 @@ interface PhoenixIdentityInterface {
     ) external;
     function addResolver(address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes calldata extraData) external;
     function addResolverAsProvider(
-        uint ein, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes calldata extraData
+        uint PHNX_ID, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes calldata extraData
     ) external;
     function addResolverFor(
         address approvingAddress, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes calldata extraData,
@@ -48,12 +48,12 @@ interface PhoenixIdentityInterface {
         address approvingAddress, address newRecoveryAddress, uint8 v, bytes32 r, bytes32 s
     ) external;
 
-    function transferPhoenixIdentityBalance(uint einTo, uint amount) external;
+    function transferPhoenixIdentityBalance(uint PHNX_IDTo, uint amount) external;
     function withdrawPhoenixIdentityBalance(address to, uint amount) external;
-    function transferPhoenixIdentityBalanceFrom(uint einFrom, uint einTo, uint amount) external;
-    function withdrawPhoenixIdentityBalanceFrom(uint einFrom, address to, uint amount) external;
-    function transferPhoenixIdentityBalanceFromVia(uint einFrom, address via, uint einTo, uint amount, bytes calldata _bytes)
+    function transferPhoenixIdentityBalanceFrom(uint PHNX_IDFrom, uint PHNX_IDTo, uint amount) external;
+    function withdrawPhoenixIdentityBalanceFrom(uint PHNX_IDFrom, address to, uint amount) external;
+    function transferPhoenixIdentityBalanceFromVia(uint PHNX_IDFrom, address via, uint PHNX_IDTo, uint amount, bytes calldata _bytes)
         external;
-    function withdrawPhoenixIdentityBalanceFromVia(uint einFrom, address via, address to, uint amount, bytes calldata _bytes)
+    function withdrawPhoenixIdentityBalanceFromVia(uint PHNX_IDFrom, address via, address to, uint amount, bytes calldata _bytes)
         external;
 }

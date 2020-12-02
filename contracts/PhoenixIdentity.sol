@@ -12,9 +12,9 @@ import "./interfaces/ClientPhoenixAuthenticationInterface.sol";
 contract PhoenixIdentity is Ownable {
     using SafeMath for uint;
 
-    // mapping of EIN to Phoenix token deposits
+    // mapping of PHNX_ID to Phoenix token deposits
     mapping (uint => uint) public deposits;
-    // mapping from EIN to resolver to allowance
+    // mapping from PHNX_ID to resolver to allowance
     mapping (uint => mapping (address => uint)) public resolverAllowances;
 
     // SC variables
@@ -33,9 +33,9 @@ contract PhoenixIdentity is Ownable {
         setAddresses(_identityRegistryAddress, _phoenixTokenAddress);
     }
 
-    // enforces that a particular EIN exists
-    modifier identityExists(uint ein, bool check) {
-        require(identityRegistry.identityExists(ein) == check, "The EIN does not exist.");
+    // enforces that a particular PHNX_ID exists
+    modifier identityExists(uint PHNX_ID, bool check) {
+        require(identityRegistry.identityExists(PHNX_ID) == check, "The PHNX_ID does not exist.");
         _;
     }
 
@@ -68,7 +68,7 @@ contract PhoenixIdentity is Ownable {
         address recoveryAddress, address associatedAddress, address[] memory providers, string memory casedPhoenixId,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     )
-        public returns (uint ein)
+        public returns (uint PHNX_ID)
     {
         address[] memory _providers = new address[](providers.length + 1);
         _providers[0] = address(this);
@@ -76,13 +76,13 @@ contract PhoenixIdentity is Ownable {
             _providers[i + 1] = providers[i];
         }
 
-        uint _ein = identityRegistry.createIdentityDelegated(
+        uint _PHNX_ID = identityRegistry.createIdentityDelegated(
             recoveryAddress, associatedAddress, _providers, new address[](0), v, r, s, timestamp
         );
 
-        _addResolver(_ein, clientPhoenixAuthenticationAddress, true, 0, abi.encode(associatedAddress, casedPhoenixId));
+        _addResolver(_PHNX_ID, clientPhoenixAuthenticationAddress, true, 0, abi.encode(associatedAddress, casedPhoenixId));
 
-        return _ein;
+        return _PHNX_ID;
     }
 
     // permission addProvidersFor by signature
@@ -91,7 +91,7 @@ contract PhoenixIdentity is Ownable {
     )
         public ensureSignatureTimeValid(timestamp)
     {
-        uint ein = identityRegistry.getEIN(approvingAddress);
+        uint PHNX_ID = identityRegistry.getPHNX_ID(approvingAddress);
         require(
             identityRegistry.isSigned(
                 approvingAddress,
@@ -99,7 +99,7 @@ contract PhoenixIdentity is Ownable {
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
                         "I authorize that these Providers be added to my Identity.",
-                        ein, providers, timestamp
+                        PHNX_ID, providers, timestamp
                     )
                 ),
                 v, r, s
@@ -107,7 +107,7 @@ contract PhoenixIdentity is Ownable {
             "Permission denied."
         );
 
-        identityRegistry.addProvidersFor(ein, providers);
+        identityRegistry.addProvidersFor(PHNX_ID, providers);
     }
 
     // permission removeProvidersFor by signature
@@ -116,7 +116,7 @@ contract PhoenixIdentity is Ownable {
     )
         public ensureSignatureTimeValid(timestamp)
     {
-        uint ein = identityRegistry.getEIN(approvingAddress);
+        uint PHNX_ID = identityRegistry.getPHNX_ID(approvingAddress);
         require(
             identityRegistry.isSigned(
                 approvingAddress,
@@ -124,7 +124,7 @@ contract PhoenixIdentity is Ownable {
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
                         "I authorize that these Providers be removed from my Identity.",
-                        ein, providers, timestamp
+                        PHNX_ID, providers, timestamp
                     )
                 ),
                 v, r, s
@@ -132,7 +132,7 @@ contract PhoenixIdentity is Ownable {
             "Permission denied."
         );
 
-        identityRegistry.removeProvidersFor(ein, providers);
+        identityRegistry.removeProvidersFor(PHNX_ID, providers);
     }
 
     // permissioned addProvidersFor and removeProvidersFor by signature
@@ -144,23 +144,23 @@ contract PhoenixIdentity is Ownable {
     {
         addProvidersFor(approvingAddress, newProviders, v[0], r[0], s[0], timestamp[0]);
         removeProvidersFor(approvingAddress, oldProviders, v[1], r[1], s[1], timestamp[1]);
-        uint ein = identityRegistry.getEIN(approvingAddress);
-        emit PhoenixIdentityProvidersUpgraded(ein, newProviders, oldProviders, approvingAddress);
+        uint PHNX_ID = identityRegistry.getPHNX_ID(approvingAddress);
+        emit PhoenixIdentityProvidersUpgraded(PHNX_ID, newProviders, oldProviders, approvingAddress);
     }
 
     // permission adding a resolver for identity of msg.sender
     function addResolver(address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData) public {
-        _addResolver(identityRegistry.getEIN(msg.sender), resolver, isPhoenixIdentity, withdrawAllowance, extraData);
+        _addResolver(identityRegistry.getPHNX_ID(msg.sender), resolver, isPhoenixIdentity, withdrawAllowance, extraData);
     }
 
     // permission adding a resolver for identity passed by a provider
     function addResolverAsProvider(
-        uint ein, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData
+        uint PHNX_ID, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData
     )
         public
     {
-        require(identityRegistry.isProviderFor(ein, msg.sender), "The msg.sender is not a Provider for the passed EIN");
-        _addResolver(ein, resolver, isPhoenixIdentity, withdrawAllowance, extraData);
+        require(identityRegistry.isProviderFor(PHNX_ID, msg.sender), "The msg.sender is not a Provider for the passed PHNX_ID");
+        _addResolver(PHNX_ID, resolver, isPhoenixIdentity, withdrawAllowance, extraData);
     }
 
     // permission addResolversFor by signature
@@ -170,17 +170,17 @@ contract PhoenixIdentity is Ownable {
     )
         public
     {
-        uint ein = identityRegistry.getEIN(approvingAddress);
+        uint PHNX_ID = identityRegistry.getPHNX_ID(approvingAddress);
 
         validateAddResolverForSignature(
-            approvingAddress, ein, resolver, isPhoenixIdentity, withdrawAllowance, extraData, v, r, s, timestamp
+            approvingAddress, PHNX_ID, resolver, isPhoenixIdentity, withdrawAllowance, extraData, v, r, s, timestamp
         );
 
-        _addResolver(ein, resolver, isPhoenixIdentity, withdrawAllowance, extraData);
+        _addResolver(PHNX_ID, resolver, isPhoenixIdentity, withdrawAllowance, extraData);
     }
 
     function validateAddResolverForSignature(
-        address approvingAddress, uint ein,
+        address approvingAddress, uint PHNX_ID,
         address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     )
@@ -193,7 +193,7 @@ contract PhoenixIdentity is Ownable {
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
                         "I authorize that this resolver be added to my Identity.",
-                        ein, resolver, isPhoenixIdentity, withdrawAllowance, extraData, timestamp
+                        PHNX_ID, resolver, isPhoenixIdentity, withdrawAllowance, extraData, timestamp
                     )
                 ),
                 v, r, s
@@ -203,27 +203,27 @@ contract PhoenixIdentity is Ownable {
     }
 
     // common logic for adding resolvers
-    function _addResolver(uint ein, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData)
+    function _addResolver(uint PHNX_ID, address resolver, bool isPhoenixIdentity, uint withdrawAllowance, bytes memory extraData)
         private
     {
-        require(!identityRegistry.isResolverFor(ein, resolver), "Identity has already set this resolver.");
+        require(!identityRegistry.isResolverFor(PHNX_ID, resolver), "Identity has already set this resolver.");
 
         address[] memory resolvers = new address[](1);
         resolvers[0] = resolver;
-        identityRegistry.addResolversFor(ein, resolvers);
+        identityRegistry.addResolversFor(PHNX_ID, resolvers);
 
         if (isPhoenixIdentity) {
-            resolverAllowances[ein][resolver] = withdrawAllowance;
+            resolverAllowances[PHNX_ID][resolver] = withdrawAllowance;
             PhoenixIdentityResolverInterface phoenixIdentityResolver = PhoenixIdentityResolverInterface(resolver);
             if (phoenixIdentityResolver.callOnAddition())
-                require(phoenixIdentityResolver.onAddition(ein, withdrawAllowance, extraData), "Sign up failure.");
-            emit PhoenixIdentityResolverAdded(ein, resolver, withdrawAllowance);
+                require(phoenixIdentityResolver.onAddition(PHNX_ID, withdrawAllowance, extraData), "Sign up failure.");
+            emit PhoenixIdentityResolverAdded(PHNX_ID, resolver, withdrawAllowance);
         }
     }
 
     // permission changing resolver allowances for identity of msg.sender
     function changeResolverAllowances(address[] memory resolvers, uint[] memory withdrawAllowances) public {
-        changeResolverAllowances(identityRegistry.getEIN(msg.sender), resolvers, withdrawAllowances);
+        changeResolverAllowances(identityRegistry.getPHNX_ID(msg.sender), resolvers, withdrawAllowances);
     }
 
     // change resolver allowances delegated
@@ -233,9 +233,9 @@ contract PhoenixIdentity is Ownable {
     )
         public
     {
-        uint ein = identityRegistry.getEIN(approvingAddress);
+        uint PHNX_ID = identityRegistry.getPHNX_ID(approvingAddress);
 
-        uint nonce = signatureNonce[ein]++;
+        uint nonce = signatureNonce[PHNX_ID]++;
         require(
             identityRegistry.isSigned(
                 approvingAddress,
@@ -243,7 +243,7 @@ contract PhoenixIdentity is Ownable {
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
                         "I authorize this change in Resolver allowances.",
-                        ein, resolvers, withdrawAllowances, nonce
+                        PHNX_ID, resolvers, withdrawAllowances, nonce
                     )
                 ),
                 v, r, s
@@ -251,23 +251,23 @@ contract PhoenixIdentity is Ownable {
             "Permission denied."
         );
 
-        changeResolverAllowances(ein, resolvers, withdrawAllowances);
+        changeResolverAllowances(PHNX_ID, resolvers, withdrawAllowances);
     }
 
     // common logic to change resolver allowances
-    function changeResolverAllowances(uint ein, address[] memory resolvers, uint[] memory withdrawAllowances) private {
+    function changeResolverAllowances(uint PHNX_ID, address[] memory resolvers, uint[] memory withdrawAllowances) private {
         require(resolvers.length == withdrawAllowances.length, "Malformed inputs.");
 
         for (uint i; i < resolvers.length; i++) {
-            require(identityRegistry.isResolverFor(ein, resolvers[i]), "Identity has not set this resolver.");
-            resolverAllowances[ein][resolvers[i]] = withdrawAllowances[i];
-            emit PhoenixIdentityResolverAllowanceChanged(ein, resolvers[i], withdrawAllowances[i]);
+            require(identityRegistry.isResolverFor(PHNX_ID, resolvers[i]), "Identity has not set this resolver.");
+            resolverAllowances[PHNX_ID][resolvers[i]] = withdrawAllowances[i];
+            emit PhoenixIdentityResolverAllowanceChanged(PHNX_ID, resolvers[i], withdrawAllowances[i]);
         }
     }
 
     // permission removing a resolver for identity of msg.sender
     function removeResolver(address resolver, bool isPhoenixIdentity, bytes memory extraData) public {
-        removeResolver(identityRegistry.getEIN(msg.sender), resolver, isPhoenixIdentity, extraData);
+        removeResolver(identityRegistry.getPHNX_ID(msg.sender), resolver, isPhoenixIdentity, extraData);
     }
 
     // permission removeResolverFor by signature
@@ -277,15 +277,15 @@ contract PhoenixIdentity is Ownable {
     )
         public ensureSignatureTimeValid(timestamp)
     {
-        uint ein = identityRegistry.getEIN(approvingAddress);
+        uint PHNX_ID = identityRegistry.getPHNX_ID(approvingAddress);
 
-        validateRemoveResolverForSignature(approvingAddress, ein, resolver, isPhoenixIdentity, extraData, v, r, s, timestamp);
+        validateRemoveResolverForSignature(approvingAddress, PHNX_ID, resolver, isPhoenixIdentity, extraData, v, r, s, timestamp);
 
-        removeResolver(ein, resolver, isPhoenixIdentity, extraData);
+        removeResolver(PHNX_ID, resolver, isPhoenixIdentity, extraData);
     }
 
     function validateRemoveResolverForSignature(
-        address approvingAddress, uint ein, address resolver, bool isPhoenixIdentity, bytes memory extraData,
+        address approvingAddress, uint PHNX_ID, address resolver, bool isPhoenixIdentity, bytes memory extraData,
         uint8 v, bytes32 r, bytes32 s, uint timestamp
     )
         private view
@@ -297,7 +297,7 @@ contract PhoenixIdentity is Ownable {
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
                         "I authorize that these Resolvers be removed from my Identity.",
-                        ein, resolver, isPhoenixIdentity, extraData, timestamp
+                        PHNX_ID, resolver, isPhoenixIdentity, extraData, timestamp
                     )
                 ),
                 v, r, s
@@ -307,21 +307,21 @@ contract PhoenixIdentity is Ownable {
     }
 
     // common logic to remove resolvers
-    function removeResolver(uint ein, address resolver, bool isPhoenixIdentity, bytes memory extraData) private {
-        require(identityRegistry.isResolverFor(ein, resolver), "Identity has not yet set this resolver.");
+    function removeResolver(uint PHNX_ID, address resolver, bool isPhoenixIdentity, bytes memory extraData) private {
+        require(identityRegistry.isResolverFor(PHNX_ID, resolver), "Identity has not yet set this resolver.");
     
-        delete resolverAllowances[ein][resolver];
+        delete resolverAllowances[PHNX_ID][resolver];
     
         if (isPhoenixIdentity) {
             PhoenixIdentityResolverInterface phoenixIdentityResolver = PhoenixIdentityResolverInterface(resolver);
             if (phoenixIdentityResolver.callOnRemoval())
-                require(phoenixIdentityResolver.onRemoval(ein, extraData), "Removal failure.");
-            emit PhoenixIdentityResolverRemoved(ein, resolver);
+                require(phoenixIdentityResolver.onRemoval(PHNX_ID, extraData), "Removal failure.");
+            emit PhoenixIdentityResolverRemoved(PHNX_ID, resolver);
         }
 
         address[] memory resolvers = new address[](1);
         resolvers[0] = resolver;
-        identityRegistry.removeResolversFor(ein, resolvers);
+        identityRegistry.removeResolversFor(PHNX_ID, resolvers);
     }
 
     function triggerRecoveryAddressChangeFor(
@@ -329,8 +329,8 @@ contract PhoenixIdentity is Ownable {
     )
         public
     {
-        uint ein = identityRegistry.getEIN(approvingAddress);
-        uint nonce = signatureNonce[ein]++;
+        uint PHNX_ID = identityRegistry.getPHNX_ID(approvingAddress);
+        uint nonce = signatureNonce[PHNX_ID]++;
         require(
             identityRegistry.isSigned(
                 approvingAddress,
@@ -338,7 +338,7 @@ contract PhoenixIdentity is Ownable {
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
                         "I authorize this change of Recovery Address.",
-                        ein, newRecoveryAddress, nonce
+                        PHNX_ID, newRecoveryAddress, nonce
                     )
                 ),
                 v, r, s
@@ -346,7 +346,7 @@ contract PhoenixIdentity is Ownable {
             "Permission denied."
         );
 
-        identityRegistry.triggerRecoveryAddressChangeFor(ein, newRecoveryAddress);
+        identityRegistry.triggerRecoveryAddressChangeFor(PHNX_ID, newRecoveryAddress);
     }
 
     // allow contract to receive Phoenix tokens
@@ -354,16 +354,16 @@ contract PhoenixIdentity is Ownable {
         require(msg.sender == _tokenAddress, "Malformed inputs.");
         require(_tokenAddress == phoenixTokenAddress, "Sender is not the phoenix token smart contract.");
 
-        // depositing to an EIN
+        // depositing to an PHNX_ID
         if (_bytes.length <= 32) {
             require(phoenixToken.transferFrom(sender, address(this), amount), "Unable to transfer token ownership.");
             uint recipient;
             if (_bytes.length < 32) {
-                recipient = identityRegistry.getEIN(sender);
+                recipient = identityRegistry.getPHNX_ID(sender);
             }
             else {
                 recipient = abi.decode(_bytes, (uint));
-                require(identityRegistry.identityExists(recipient), "The recipient EIN does not exist.");
+                require(identityRegistry.identityExists(recipient), "The recipient PHNX_ID does not exist.");
             }
             deposits[recipient] = deposits[recipient].add(amount);
             emit PhoenixIdentityDeposit(sender, recipient, amount);
@@ -389,88 +389,88 @@ contract PhoenixIdentity is Ownable {
     }
 
     // transfer PhoenixIdentity balance from one PhoenixIdentity holder to another
-    function transferPhoenixIdentityBalance(uint einTo, uint amount) public {
-        _transfer(identityRegistry.getEIN(msg.sender), einTo, amount);
+    function transferPhoenixIdentityBalance(uint PHNX_IDTo, uint amount) public {
+        _transfer(identityRegistry.getPHNX_ID(msg.sender), PHNX_IDTo, amount);
     }
 
     // withdraw PhoenixIdentity balance to an external address
     function withdrawPhoenixIdentityBalance(address to, uint amount) public {
-        _withdraw(identityRegistry.getEIN(msg.sender), to, amount);
+        _withdraw(identityRegistry.getPHNX_ID(msg.sender), to, amount);
     }
 
     // allows resolvers to transfer allowance amounts to other phoenixIdentitys (throws if unsuccessful)
-    function transferPhoenixIdentityBalanceFrom(uint einFrom, uint einTo, uint amount) public {
-        handleAllowance(einFrom, amount);
-        _transfer(einFrom, einTo, amount);
+    function transferPhoenixIdentityBalanceFrom(uint PHNX_IDFrom, uint PHNX_IDTo, uint amount) public {
+        handleAllowance(PHNX_IDFrom, amount);
+        _transfer(PHNX_IDFrom, PHNX_IDTo, amount);
         emit PhoenixIdentityTransferFrom(msg.sender);
     }
 
     // allows resolvers to withdraw allowance amounts to external addresses (throws if unsuccessful)
-    function withdrawPhoenixIdentityBalanceFrom(uint einFrom, address to, uint amount) public {
-        handleAllowance(einFrom, amount);
-        _withdraw(einFrom, to, amount);
+    function withdrawPhoenixIdentityBalanceFrom(uint PHNX_IDFrom, address to, uint amount) public {
+        handleAllowance(PHNX_IDFrom, amount);
+        _withdraw(PHNX_IDFrom, to, amount);
         emit PhoenixIdentityWithdrawFrom(msg.sender);
     }
 
     // allows resolvers to send withdrawal amounts to arbitrary smart contracts 'to' identities (throws if unsuccessful)
-    function transferPhoenixIdentityBalanceFromVia(uint einFrom, address via, uint einTo, uint amount, bytes memory _bytes)
+    function transferPhoenixIdentityBalanceFromVia(uint PHNX_IDFrom, address via, uint PHNX_IDTo, uint amount, bytes memory _bytes)
         public
     {
-        handleAllowance(einFrom, amount);
-        _withdraw(einFrom, via, amount);
+        handleAllowance(PHNX_IDFrom, amount);
+        _withdraw(PHNX_IDFrom, via, amount);
         PhoenixIdentityViaInterface viaContract = PhoenixIdentityViaInterface(via);
-        viaContract.phoenixIdentityCall(msg.sender, einFrom, einTo, amount, _bytes);
-        emit PhoenixIdentityTransferFromVia(msg.sender, einTo);
+        viaContract.phoenixIdentityCall(msg.sender, PHNX_IDFrom, PHNX_IDTo, amount, _bytes);
+        emit PhoenixIdentityTransferFromVia(msg.sender, PHNX_IDTo);
     }
 
     // allows resolvers to send withdrawal amounts 'to' addresses via arbitrary smart contracts
     function withdrawPhoenixIdentityBalanceFromVia(
-        uint einFrom, address via, address payable to, uint amount, bytes memory _bytes
+        uint PHNX_IDFrom, address via, address payable to, uint amount, bytes memory _bytes
     )
         public
     {
-        handleAllowance(einFrom, amount);
-        _withdraw(einFrom, via, amount);
+        handleAllowance(PHNX_IDFrom, amount);
+        _withdraw(PHNX_IDFrom, via, amount);
         PhoenixIdentityViaInterface viaContract = PhoenixIdentityViaInterface(via);
-        viaContract.phoenixIdentityCall(msg.sender, einFrom, to, amount, _bytes);
+        viaContract.phoenixIdentityCall(msg.sender, PHNX_IDFrom, to, amount, _bytes);
         emit PhoenixIdentityWithdrawFromVia(msg.sender, to);
     }
 
-    function _transfer(uint einFrom, uint einTo, uint amount) private identityExists(einTo, true) returns (bool) {
-        require(deposits[einFrom] >= amount, "Cannot withdraw more than the current deposit balance.");
-        deposits[einFrom] = deposits[einFrom].sub(amount);
-        deposits[einTo] = deposits[einTo].add(amount);
+    function _transfer(uint PHNX_IDFrom, uint PHNX_IDTo, uint amount) private identityExists(PHNX_IDTo, true) returns (bool) {
+        require(deposits[PHNX_IDFrom] >= amount, "Cannot withdraw more than the current deposit balance.");
+        deposits[PHNX_IDFrom] = deposits[PHNX_IDFrom].sub(amount);
+        deposits[PHNX_IDTo] = deposits[PHNX_IDTo].add(amount);
 
-        emit PhoenixIdentityTransfer(einFrom, einTo, amount);
+        emit PhoenixIdentityTransfer(PHNX_IDFrom, PHNX_IDTo, amount);
     }
 
-    function _withdraw(uint einFrom, address to, uint amount) internal {
+    function _withdraw(uint PHNX_IDFrom, address to, uint amount) internal {
         require(to != address(this), "Cannot transfer to the PhoenixIdentity smart contract itself.");
 
-        require(deposits[einFrom] >= amount, "Cannot withdraw more than the current deposit balance.");
-        deposits[einFrom] = deposits[einFrom].sub(amount);
+        require(deposits[PHNX_IDFrom] >= amount, "Cannot withdraw more than the current deposit balance.");
+        deposits[PHNX_IDFrom] = deposits[PHNX_IDFrom].sub(amount);
         require(phoenixToken.transfer(to, amount), "Transfer was unsuccessful");
 
-        emit PhoenixIdentityWithdraw(einFrom, to, amount);
+        emit PhoenixIdentityWithdraw(PHNX_IDFrom, to, amount);
     }
 
-    function handleAllowance(uint einFrom, uint amount) internal {
+    function handleAllowance(uint PHNX_IDFrom, uint amount) internal {
         // check that resolver-related details are correct
-        require(identityRegistry.isResolverFor(einFrom, msg.sender), "Resolver has not been set by from tokenholder.");
+        require(identityRegistry.isResolverFor(PHNX_IDFrom, msg.sender), "Resolver has not been set by from tokenholder.");
 
-        if (resolverAllowances[einFrom][msg.sender] < amount) {
-            emit PhoenixIdentityInsufficientAllowance(einFrom, msg.sender, resolverAllowances[einFrom][msg.sender], amount);
+        if (resolverAllowances[PHNX_IDFrom][msg.sender] < amount) {
+            emit PhoenixIdentityInsufficientAllowance(PHNX_IDFrom, msg.sender, resolverAllowances[PHNX_IDFrom][msg.sender], amount);
             revert("Insufficient Allowance");
         }
 
-        resolverAllowances[einFrom][msg.sender] = resolverAllowances[einFrom][msg.sender].sub(amount);
+        resolverAllowances[PHNX_IDFrom][msg.sender] = resolverAllowances[PHNX_IDFrom][msg.sender].sub(amount);
     }
 
     // allowAndCall from msg.sender
     function allowAndCall(address destination, uint amount, bytes memory data)
         public returns (bytes memory returnData)
     {
-        return allowAndCall(identityRegistry.getEIN(msg.sender), amount, destination, data);
+        return allowAndCall(identityRegistry.getPHNX_ID(msg.sender), amount, destination, data);
     }
 
     // allowAndCall from approvingAddress with meta-transaction
@@ -479,15 +479,15 @@ contract PhoenixIdentity is Ownable {
     )
         public returns (bytes memory returnData)
     {
-        uint ein = identityRegistry.getEIN(approvingAddress);
-        uint nonce = signatureNonce[ein]++;
-        validateAllowAndCallDelegatedSignature(approvingAddress, ein, destination, amount, data, nonce, v, r, s);
+        uint PHNX_ID = identityRegistry.getPHNX_ID(approvingAddress);
+        uint nonce = signatureNonce[PHNX_ID]++;
+        validateAllowAndCallDelegatedSignature(approvingAddress, PHNX_ID, destination, amount, data, nonce, v, r, s);
 
-        return allowAndCall(ein, amount, destination, data);
+        return allowAndCall(PHNX_ID, amount, destination, data);
     }
 
     function validateAllowAndCallDelegatedSignature(
-        address approvingAddress, uint ein, address destination, uint amount, bytes memory data, uint nonce,
+        address approvingAddress, uint PHNX_ID, address destination, uint amount, bytes memory data, uint nonce,
         uint8 v, bytes32 r, bytes32 s
     )
         private view
@@ -498,7 +498,7 @@ contract PhoenixIdentity is Ownable {
                 keccak256(
                     abi.encodePacked(
                         byte(0x19), byte(0), address(this),
-                        "I authorize this allow and call.", ein, destination, amount, data, nonce
+                        "I authorize this allow and call.", PHNX_ID, destination, amount, data, nonce
                     )
                 ),
                 v, r, s
@@ -508,13 +508,13 @@ contract PhoenixIdentity is Ownable {
     }
 
     // internal logic for allowAndCall
-    function allowAndCall(uint ein, uint amount, address destination, bytes memory data)
+    function allowAndCall(uint PHNX_ID, uint amount, address destination, bytes memory data)
         private returns (bytes memory returnData)
     {
         // check that resolver-related details are correct
-        require(identityRegistry.isResolverFor(ein, destination), "Destination has not been set by from tokenholder.");
+        require(identityRegistry.isResolverFor(PHNX_ID, destination), "Destination has not been set by from tokenholder.");
         if (amount != 0) {
-            resolverAllowances[ein][destination] = resolverAllowances[ein][destination].add(amount);
+            resolverAllowances[PHNX_ID][destination] = resolverAllowances[PHNX_ID][destination].add(amount);
         }
 
         // solium-disable-next-line security/no-low-level-calls
@@ -524,24 +524,24 @@ contract PhoenixIdentity is Ownable {
     }
 
     // events
-    event PhoenixIdentityProvidersUpgraded(uint indexed ein, address[] newProviders, address[] oldProviders, address approvingAddress);
+    event PhoenixIdentityProvidersUpgraded(uint indexed PHNX_ID, address[] newProviders, address[] oldProviders, address approvingAddress);
 
-    event PhoenixIdentityResolverAdded(uint indexed ein, address indexed resolver, uint withdrawAllowance);
-    event PhoenixIdentityResolverAllowanceChanged(uint indexed ein, address indexed resolver, uint withdrawAllowance);
-    event PhoenixIdentityResolverRemoved(uint indexed ein, address indexed resolver);
+    event PhoenixIdentityResolverAdded(uint indexed PHNX_ID, address indexed resolver, uint withdrawAllowance);
+    event PhoenixIdentityResolverAllowanceChanged(uint indexed PHNX_ID, address indexed resolver, uint withdrawAllowance);
+    event PhoenixIdentityResolverRemoved(uint indexed PHNX_ID, address indexed resolver);
 
-    event PhoenixIdentityDeposit(address indexed from, uint indexed einTo, uint amount);
-    event PhoenixIdentityTransfer(uint indexed einFrom, uint indexed einTo, uint amount);
-    event PhoenixIdentityWithdraw(uint indexed einFrom, address indexed to, uint amount);
+    event PhoenixIdentityDeposit(address indexed from, uint indexed PHNX_IDTo, uint amount);
+    event PhoenixIdentityTransfer(uint indexed PHNX_IDFrom, uint indexed PHNX_IDTo, uint amount);
+    event PhoenixIdentityWithdraw(uint indexed PHNX_IDFrom, address indexed to, uint amount);
 
     event PhoenixIdentityTransferFrom(address indexed resolverFrom);
     event PhoenixIdentityWithdrawFrom(address indexed resolverFrom);
-    event PhoenixIdentityTransferFromVia(address indexed resolverFrom, uint indexed einTo);
+    event PhoenixIdentityTransferFromVia(address indexed resolverFrom, uint indexed PHNX_IDTo);
     event PhoenixIdentityWithdrawFromVia(address indexed resolverFrom, address indexed to);
-    event PhoenixIdentityTransferToVia(address indexed resolverFrom, address indexed via, uint indexed einTo, uint amount);
+    event PhoenixIdentityTransferToVia(address indexed resolverFrom, address indexed via, uint indexed PHNX_IDTo, uint amount);
     event PhoenixIdentityWithdrawToVia(address indexed resolverFrom, address indexed via, address indexed to, uint amount);
 
     event PhoenixIdentityInsufficientAllowance(
-        uint indexed ein, address indexed resolver, uint currentAllowance, uint requestedWithdraw
+        uint indexed PHNX_ID, address indexed resolver, uint currentAllowance, uint requestedWithdraw
     );
 }

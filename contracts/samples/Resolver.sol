@@ -24,9 +24,9 @@ contract Resolver is PhoenixIdentityResolver {
     }
 
     // implement signup function
-    function onAddition(uint ein, uint allowance, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
+    function onAddition(uint PHNX_ID, uint allowance, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
         require(allowance >= 2000000000000000000, "Must set an allowance of >=2 PHOENIX.");
-        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(ein, address(this), allowance / 2);
+        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(PHNX_ID, address(this), allowance / 2);
         return true;
     }
 
@@ -34,39 +34,39 @@ contract Resolver is PhoenixIdentityResolver {
     function onRemoval(uint, bytes memory) public senderIsPhoenixIdentity() returns (bool) {}
 
     // example function to test allowAndCall
-    function transferPhoenixIdentityBalanceFromAllowAndCall(uint einFrom, uint einTo, uint amount) public {
-        require(identityRegistry.isProviderFor(einFrom, msg.sender));
-        phoenixIdentity.transferPhoenixIdentityBalanceFrom(einFrom, einTo, amount);
+    function transferPhoenixIdentityBalanceFromAllowAndCall(uint PHNX_IDFrom, uint PHNX_IDTo, uint amount) public {
+        require(identityRegistry.isProviderFor(PHNX_IDFrom, msg.sender));
+        phoenixIdentity.transferPhoenixIdentityBalanceFrom(PHNX_IDFrom, PHNX_IDTo, amount);
     }
 
     // example functions to test *From token functions
-    function transferPhoenixIdentityBalanceFrom(uint einTo, uint amount) public {
-        phoenixIdentity.transferPhoenixIdentityBalanceFrom(identityRegistry.getEIN(msg.sender), einTo, amount);
+    function transferPhoenixIdentityBalanceFrom(uint PHNX_IDTo, uint amount) public {
+        phoenixIdentity.transferPhoenixIdentityBalanceFrom(identityRegistry.getPHNX_ID(msg.sender), PHNX_IDTo, amount);
     }
 
     function withdrawPhoenixIdentityBalanceFrom(address to, uint amount) public {
-        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(identityRegistry.getEIN(msg.sender), to, amount);
+        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(identityRegistry.getPHNX_ID(msg.sender), to, amount);
     }
 
-    function transferPhoenixIdentityBalanceFromVia(address via, uint einTo, uint amount) public {
-        phoenixIdentity.transferPhoenixIdentityBalanceFromVia(identityRegistry.getEIN(msg.sender), via, einTo, amount, hex"");
+    function transferPhoenixIdentityBalanceFromVia(address via, uint PHNX_IDTo, uint amount) public {
+        phoenixIdentity.transferPhoenixIdentityBalanceFromVia(identityRegistry.getPHNX_ID(msg.sender), via, PHNX_IDTo, amount, hex"");
     }
 
     function withdrawPhoenixIdentityBalanceFromVia(address via, address to, uint amount) public {
-        phoenixIdentity.withdrawPhoenixIdentityBalanceFromVia(identityRegistry.getEIN(msg.sender), via, to, amount, hex"");
+        phoenixIdentity.withdrawPhoenixIdentityBalanceFromVia(identityRegistry.getPHNX_ID(msg.sender), via, to, amount, hex"");
     }
 
     // example functions to test *To token functions
-    function _transferPhoenixBalanceTo(uint einTo, uint amount) public onlyOwner {
-        transferPhoenixBalanceTo(einTo, amount);
+    function _transferPhoenixBalanceTo(uint PHNX_IDTo, uint amount) public onlyOwner {
+        transferPhoenixBalanceTo(PHNX_IDTo, amount);
     }
 
     function _withdrawPhoenixBalanceTo(address to, uint amount) public onlyOwner {
         withdrawPhoenixBalanceTo(to, amount);
     }
 
-    function _transferPhoenixBalanceToVia(address via, uint einTo, uint amount) public onlyOwner {
-        transferPhoenixBalanceToVia(via, einTo, amount, hex"");
+    function _transferPhoenixBalanceToVia(address via, uint PHNX_IDTo, uint amount) public onlyOwner {
+        transferPhoenixBalanceToVia(via, PHNX_IDTo, amount, hex"");
     }
 
     function _withdrawPhoenixBalanceToVia(address via, address to, uint amount) public onlyOwner {

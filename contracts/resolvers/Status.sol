@@ -16,33 +16,33 @@ contract Status is PhoenixIdentityResolver {
     {}
 
     // implement signup function
-    function onAddition(uint ein, uint, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
+    function onAddition(uint PHNX_ID, uint, bytes memory) public senderIsPhoenixIdentity() returns (bool) {
         PhoenixIdentityInterface phoenixIdentity = PhoenixIdentityInterface(phoenixIdentityAddress);
-        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(ein, owner(), signUpFee);
+        phoenixIdentity.withdrawPhoenixIdentityBalanceFrom(PHNX_ID, owner(), signUpFee);
 
-        statuses[ein] = firstStatus;
+        statuses[PHNX_ID] = firstStatus;
 
-        emit StatusSignUp(ein);
+        emit StatusSignUp(PHNX_ID);
 
         return true;
     }
 
     function onRemoval(uint, bytes memory) public senderIsPhoenixIdentity() returns (bool) {}
 
-    function getStatus(uint ein) public view returns (string memory) {
-        return statuses[ein];
+    function getStatus(uint PHNX_ID) public view returns (string memory) {
+        return statuses[PHNX_ID];
     }
 
     function setStatus(string memory status) public {
         PhoenixIdentityInterface phoenixIdentity = PhoenixIdentityInterface(phoenixIdentityAddress);
         IdentityRegistryInterface identityRegistry = IdentityRegistryInterface(phoenixIdentity.identityRegistryAddress());
 
-        uint ein = identityRegistry.getEIN(msg.sender);
-        require(identityRegistry.isResolverFor(ein, address(this)), "The EIN has not set this resolver.");
+        uint PHNX_ID = identityRegistry.getPHNX_ID(msg.sender);
+        require(identityRegistry.isResolverFor(PHNX_ID, address(this)), "The PHNX_ID has not set this resolver.");
 
-        statuses[ein] = status;
+        statuses[PHNX_ID] = status;
 
-        emit StatusUpdated(ein, status);
+        emit StatusUpdated(PHNX_ID, status);
     }
 
     function withdrawFees(address to) public onlyOwner() {
@@ -51,6 +51,6 @@ contract Status is PhoenixIdentityResolver {
         withdrawPhoenixBalanceTo(to, phoenix.balanceOf(address(this)));
     }
 
-    event StatusSignUp(uint ein);
-    event StatusUpdated(uint ein, string status);
+    event StatusSignUp(uint PHNX_ID);
+    event StatusUpdated(uint PHNX_ID, string status);
 }

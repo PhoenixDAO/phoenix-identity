@@ -14,7 +14,7 @@ interface ClientPhoenixAuthenticationInterface {
     function PhoenixIDActive(string calldata uncasedPhoenixID) external view returns (bool active);
 
     function getDetails(string calldata uncasedPhoenixID) external view
-        returns (uint ein, address _address, string memory casedPhoenixID);
-    function getDetails(uint ein) external view returns (address _address, string memory casedPhoenixID);
-    function getDetails(address _address) external view returns (uint ein, string memory casedPhoenixID);
+        returns (uint PHNX_ID, address _address, string memory casedPhoenixID);
+    function getDetails(uint PHNX_ID) external view returns (address _address, string memory casedPhoenixID);
+    function getDetails(address _address) external view returns (uint PHNX_ID, string memory casedPhoenixID);
 }

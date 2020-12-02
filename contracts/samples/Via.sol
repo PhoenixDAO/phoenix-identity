@@ -23,7 +23,7 @@ contract Via is PhoenixIdentityVia {
     // this contract is responsible for funding itself with ETH, and must be entrusted to do so
     function fund() public payable {}
 
-    // EIN -> ETH balances
+    // PHNX_ID -> ETH balances
     mapping (uint => uint) public balances;
 
     // a dummy exchange rate between phoenix and ETH s.t. 10 PHOENIX := 1 ETH for testing purposes
@@ -32,17 +32,17 @@ contract Via is PhoenixIdentityVia {
         return amount / exchangeRate; // POTENTIALLY UNSAFE - always use SafeMath when not testing
     }
 
-    // end recipient is an EIN, credit their (ETH) balance
-    function phoenixIdentityCall(address, uint, uint einTo, uint amount, bytes memory) public senderIsPhoenixIdentity() {
-        creditEIN(einTo, amount);
+    // end recipient is an PHNX_ID, credit their (ETH) balance
+    function phoenixIdentityCall(address, uint, uint PHNX_IDTo, uint amount, bytes memory) public senderIsPhoenixIdentity() {
+        creditPHNX_ID(PHNX_IDTo, amount);
     }
 
-    function phoenixIdentityCall(address, uint einTo, uint amount, bytes memory) public senderIsPhoenixIdentity() {
-        creditEIN(einTo, amount);
+    function phoenixIdentityCall(address, uint PHNX_IDTo, uint amount, bytes memory) public senderIsPhoenixIdentity() {
+        creditPHNX_ID(PHNX_IDTo, amount);
     }
 
-    function creditEIN(uint einTo, uint amount) private {
-        balances[einTo] += convertPhoenixToEth(amount);
+    function creditPHNX_ID(uint PHNX_IDTo, uint amount) private {
+        balances[PHNX_IDTo] += convertPhoenixToEth(amount);
     }
 
     // end recipient is an address, send them ETH
@@ -61,7 +61,7 @@ contract Via is PhoenixIdentityVia {
     // allows phoenixIds with balances to withdraw their accumulated eth balance to an address
     function withdrawTo(address payable to) public {
         IdentityRegistryInterface identityRegistry = IdentityRegistryInterface(phoenixIdentity.identityRegistryAddress());
-        to.transfer(balances[identityRegistry.getEIN(msg.sender)]);
+        to.transfer(balances[identityRegistry.getPHNX_ID(msg.sender)]);
     }
 
     // allows the owner to withdraw the contract's accumulated phoenix balance to an address
